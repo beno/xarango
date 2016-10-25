@@ -1,6 +1,7 @@
 # Xarango
 
-**TODO: Add description**
+Elixir client library for ArangoDB.
+
 
 ## Installation
 
