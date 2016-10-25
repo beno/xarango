@@ -27,7 +27,7 @@ defmodule Xarango.Query do
   end
   
   def explain(query) do
-    "/_api/explain"
+    Xarango.Connection.url("/_api/explain")
     |> Client.post(query)
     |> to_explanation
   end

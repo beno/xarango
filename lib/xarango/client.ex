@@ -27,7 +27,6 @@ defmodule Xarango.Client do
   end
 
   defp do_request(method, url, body) when is_binary(body) do
-    url = if String.starts_with?(url, "/"), do: Xarango.Connection.url(url), else: url
     case HTTPotion.request(method, url, [body: body, headers: Xarango.Connection.headers]) do
       {:error, error} -> raise error
       response ->  do_decode(response)

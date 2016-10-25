@@ -6,8 +6,8 @@ defmodule Xarango.Database do
   defstruct [:id, :name, :isSystem, :path, :users]
   
   def databases() do
-    url = "/_api/database"
-    Client.get(url)
+    url("")
+    |> Client.get
     |> Enum.map(fn name -> struct(Database, [name: name])  end)
   end
   
@@ -40,11 +40,11 @@ defmodule Xarango.Database do
   end
 
   defp url(path, options\\[]) do
-    "/_api/database/#{path}"
+    Xarango.Connection.url("/_api/database/#{path}", options)
   end
   
   defp db_url(database, path, options\\[]) do
-    "/_db/#{database.name}/_api/database/#{path}"
+    Xarango.Connection.url("/_db/#{database.name}/_api/database/#{path}", options)
   end
 
   
