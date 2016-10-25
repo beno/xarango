@@ -2,6 +2,18 @@
 
 Elixir client library for ArangoDB.
 
+## Usage
+
+Export username and password for your db user account:
+
+    export ARANGO_USER=root
+    export ARANGO_PASSWORD=foobar
+    
+Run tests
+
+    mix test
+    
+See tests for usage examples.
 
 ## Installation
 
