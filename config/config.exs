@@ -9,8 +9,8 @@ config :xarango, db_defaults: [
 ]
 
 config :xarango, db_auth: [
-  username: "root",
-  password: "foobar"
+  username: System.get_env("ARANGO_USER"),
+  password: System.get_env("ARANGO_PASSWORD"),
 ]
 
 
