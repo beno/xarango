@@ -133,12 +133,29 @@ defmodule SimpleQueryTest do
     assert is_list(result)
     assert length(result) > 0
   end
+  
+  test "fulltext" do
+    coll = Xarango.Collection.create(collection_)
+    index = %Xarango.Index{type: "fulltext", fields: ["field"]}
+      |> Xarango.Index.create(coll)
+    _documents(30, coll)
+    query = %SimpleQuery{collection: coll.name, query: "prefix:a", attribute: "field", limit: 100 }
+    result = SimpleQuery.fulltext(query)
+    Xarango.Index.destroy(index)
+    assert is_list(result)
+    assert length(result) > 0
+  end
 
   defp _documents(count) do
     coll = Xarango.Collection.create(collection_)
-    docs = Enum.map(1..count, fn _ -> Document.create(document_, coll) end)
-    {coll, docs}
+    _documents(count, coll)
   end
+  
+  defp _documents(count, collection) do
+    docs = Enum.map(1..count, fn _ -> Document.create(document_, collection) end)
+    {collection, docs}
+  end
+
   
   defp _geo_documents(count, coll) do
     Enum.map(1..count, fn _ -> 

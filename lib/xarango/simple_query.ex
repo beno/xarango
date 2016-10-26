@@ -1,7 +1,7 @@
 defmodule Xarango.SimpleQuery do
   
   defstruct [:collection, :skip, :limit, :example, :keys, :options, :newValue, :right, :left,
-    :attribute, :closed, :latitude, :longitude, :latitude1, :longitude1, :latitude2, :longitude2, :radius]
+    :attribute, :closed, :latitude, :longitude, :latitude1, :longitude1, :latitude2, :longitude2, :radius, :query]
   
   alias Xarango.SimpleQuery
   alias Xarango.Client
@@ -66,8 +66,7 @@ defmodule Xarango.SimpleQuery do
     vars = Map.take(query, [:left, :right, :attribute, :skip, :limit])
     %Query{query: q, bindVars: vars}
     |> Query.query
-    |> Map.get(:result)
-    |> Enum.map(&Document.to_document(&1))
+    |> to_documents
   end
   
   def near(query) do
@@ -75,21 +74,33 @@ defmodule Xarango.SimpleQuery do
     vars = Map.take(query, [:latitude, :longitude, :limit])
     %Query{query: q, bindVars: vars}
     |> Query.query
-    |> Map.get(:result)
-    |> Enum.map(&Document.to_document(&1))
+    |> to_documents
   end
   
   def within(query) do
     q = "FOR doc IN WITHIN(#{query.collection}, @latitude, @longitude, @radius, @attribute) RETURN doc"
-    %Query{query: q, bindVars: Map.take(query, [:latitude, :longitude, :radius, :attribute])}
+    vars = Map.take(query, [:latitude, :longitude, :radius, :attribute])
+    %Query{query: q, bindVars: vars}
     |> Query.query
-    |> Map.get(:result)
-    |> Enum.map(&Document.to_document(&1))
+    |> to_documents
   end
   
   def within_rectangle(query) do
     url("within-rectangle")
     |> Client.put(query)
+    |> to_documents
+  end
+  
+  def fulltext(query) do
+    q = "FOR doc IN FULLTEXT(#{query.collection}, @attribute, @query, @limit) RETURN doc"
+    vars = Map.take(query, [:query, :limit, :attribute])
+    %Query{query: q, bindVars: vars}
+    |> Query.query
+    |> to_documents
+  end
+  
+  defp to_documents(data) do
+    data
     |> Map.get(:result)
     |> Enum.map(&Document.to_document(&1))
   end
