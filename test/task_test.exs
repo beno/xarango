@@ -32,11 +32,12 @@ defmodule TaskTest do
   end
   
   test "create task with id" do
-    source = %Task{ _task | id: "foobar" }
+    id = name_
+    source = %Task{ _task | id: id }
     task = Task.create(source)
     Task.destroy(task)
     assert task.name == source.name
-    assert task.id == "foobar"
+    assert task.id == id
   end
   
   test "destroy task" do
@@ -44,7 +45,6 @@ defmodule TaskTest do
     result = Task.destroy(task)
     refute result[:error]
   end
-
   
   defp _task do
     %Task{name: name_, command: "(function(params){return params})(params)", params: %{foo: "bar"}, period: 3}

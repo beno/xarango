@@ -108,7 +108,7 @@ defmodule DocumentTest do
   test "unknown document" do
     collection = Collection.create(collection_)
     document = %Document{_id: "#{collection.name}/unknown"}
-    assert_raise RuntimeError, "document not found", fn ->
+    assert_raise Xarango.Error, "document not found", fn ->
       Document.document(document)
     end
   end

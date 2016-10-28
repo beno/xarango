@@ -2,30 +2,31 @@ defmodule Xarango.Graph do
   
   defstruct [:_key, :_id, :_rev, :name, :edgeDefinitions, :orphanCollections]
   
-  alias Xarango.Client
+  import Xarango.Client
+  use Xarango.URI, prefix: "gharial"
   
   def graphs do
     url()
-    |> Client.get
+    |> get
     |> Map.get(:graphs)
     |> Enum.map(&to_graph(&1))
   end
   
   def graph(graph, options\\[]) do
     url(graph.name, options)
-    |> Client.get
+    |> get
     |> to_graph
   end
   
   def create(graph, options\\[]) do
     url("", options)
-    |> Client.post(graph)
+    |> post(graph)
     |> to_graph
   end
   
   def destroy(graph, options\\[]) do
     url(graph.name, options)
-    |> Client.delete
+    |> delete
   end
   
   def __destroy_all do
@@ -35,43 +36,43 @@ defmodule Xarango.Graph do
 
   def vertex_collections(graph) do
     url("#{graph.name}/vertex")
-    |> Client.get
+    |> get
     |> Map.get(:collections)
   end
   
   def add_vertex_collection(graph, collection) do
     url("#{graph.name}/vertex")
-    |> Client.post(collection)
+    |> post(collection)
     |> to_graph
   end
   
   def remove_vertex_collection(graph, collection) do
     url("#{graph.name}/vertex/#{collection.collection}")
-    |> Client.delete
+    |> delete
     |> to_graph
   end
   
   def edge_definitions(graph) do
     url("#{graph.name}/edge")
-    |> Client.get
+    |> get
     |> Map.get(:collections)
   end
   
   def add_edge_definition(graph, edge_def) do
     url("#{graph.name}/edge")
-    |> Client.post(edge_def)
+    |> post(edge_def)
     |> to_graph
   end
 
   def remove_edge_definition(graph, edge_def) do
     url("#{graph.name}/edge/#{edge_def.collection}")
-    |> Client.delete  
+    |> delete  
     |> to_graph
   end
   
   def replace_edge_definition(graph, edge_def) do
     url("#{graph.name}/edge/#{edge_def.collection}")
-    |> Client.put(edge_def)
+    |> put(edge_def)
     |> to_graph
   end
   
@@ -107,9 +108,6 @@ defmodule Xarango.Graph do
   # 
   # end
   
-  defp url(path\\"", options\\[]) do
-    Xarango.Connection.url("/_api/gharial/#{path}", options)
-  end
   
 end
 

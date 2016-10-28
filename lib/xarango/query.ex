@@ -2,33 +2,35 @@ defmodule Xarango.Query do
   
   defstruct [:query, :count, :ttl, :batchSize, :cache, :bindVars, :options]
   
-  alias Xarango.Client
   alias Xarango.Query
+  import Xarango.Client
+  use Xarango.URI, prefix: "cursor"
   
   def query(query) when is_binary(query) do
     query(%Query{query: query})
   end
 
-  def query(query) do
-    url
-    |> Client.post(query)
+  def query(query, database\\nil) do
+    url("", database)
+    |> post(query)
     |> to_result
   end
   
-  def next(result) do
+  def next(result, database\\nil) do
     result.hasMore &&
     case result.id do
       nil -> false
       id ->
-        url(id)
-        |> Client.put(%{})
+        url(id, database)
+        |> put(%{})
         |> to_result
     end
   end
   
-  def explain(query) do
-    Xarango.Connection.url("/_api/explain")
-    |> Client.post(query)
+  def explain(query, database\\nil) do
+    Xarango.URI.path("explain", database)
+    |> Xarango.Client._url([])
+    |> post(query)
     |> to_explanation
   end
   
@@ -38,14 +40,7 @@ defmodule Xarango.Query do
   
   defp to_explanation(data) do
     struct(Xarango.Explanation, data)
-  end
-
-    
-  
-  defp url(path\\"", options\\[]) do
-    Xarango.Connection.url("/_api/cursor/#{path}", options)
-  end
-  
+  end  
   
 end
 

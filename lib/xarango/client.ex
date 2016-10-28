@@ -5,12 +5,37 @@ defmodule Xarango.Client do
     def unquote(method)(url, body\\"") do
       case do_request(unquote(method), url, body) do
         {:ok, body} -> body
-        {:error, error} -> raise error[:errorMessage]
+        {:error, error} -> do_error error[:errorMessage]
       end
     end
   end)
-
-  # defp do_request(method, url, body\\"")
+  
+  def _url(path, options\\[]) do
+    Xarango.Server.server.server <> path <> query_params(options)
+  end
+  
+  def credentials do
+    case Xarango.Server.server do
+      %{username: nil} -> do_error "missing database username, set ARANGO_USER environment variable"
+      %{password: nil} -> do_error "missing database password, set ARANGO_PASSWORD environment variable"
+      %{username: username, password: password} -> {username, password}
+      _ -> do_error "database credentials invalid, update `xarango.db` app config"
+    end
+  end
+  
+  def headers do
+    {username, password} = credentials
+    auth_header = "Basic " <> Base.encode64("#{username}:#{password}")
+    ["Accept": "*/*", "Authorization": auth_header]
+    #x-arango-async
+  end
+  
+  defp query_params(options) do
+    case URI.encode_query(options) do
+      "" -> ""
+      params -> "?" <> params
+    end
+  end
   
   defp do_request(method, url, body) when is_list(body) do
     body = body
@@ -27,19 +52,19 @@ defmodule Xarango.Client do
   end
 
   defp do_request(method, url, body) when is_binary(body) do
-    case HTTPotion.request(method, url, [body: body, headers: Xarango.Connection.headers]) do
-      {:error, error} -> raise error
-      response ->  do_decode(response)
+    case HTTPoison.request(method, url, body, headers) do
+      {:error, error} -> raise Xarango.Error, message: error
+      {:ok, response} ->  do_decode(response)
     end
   end
   
   defp do_decode(response) do
     case response do
-      %HTTPotion.Response{status_code: status_code, body: body} when status_code >= 200 and status_code < 300 ->
+      %HTTPoison.Response{status_code: status_code, body: body} when status_code >= 200 and status_code < 300 ->
         {:ok, Poison.decode!(body, keys: :atoms)}
-      %HTTPotion.Response{body: body} ->
+      %HTTPoison.Response{body: body} ->
         {:error, Poison.decode!(body, keys: :atoms)}
-      %HTTPotion.ErrorResponse{message: message} -> raise message
+      %HTTPoison.Error{reason: reason} -> do_error reason
     end
   end
   
@@ -95,5 +120,8 @@ defmodule Xarango.Client do
     end)    
   end
 
+  defp do_error(msg) do
+    raise Xarango.Error, message: msg
+  end
         
 end

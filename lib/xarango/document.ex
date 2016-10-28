@@ -2,48 +2,35 @@ defmodule Xarango.Document do
   
   defstruct [:_key, :_id, :_rev, :_oldRev, :_data]
   
-  alias Xarango.Client
   alias Xarango.Document
+  import Xarango.Client
+  use Xarango.URI, prefix: "document"
   
-  def document(document) do
-    url(document._id)
-    |> Client.get
+  def document(document, database\\nil) do
+    url(document._id, database)
+    |> get
     |> to_document
   end
   
-  def documents(collection) do
+  def documents(collection, database\\nil) do
     %Xarango.SimpleQuery{collection: collection.name}
-    |> Xarango.SimpleQuery.all
+    |> Xarango.SimpleQuery.all(database)
     |> Map.get(:result)
     |> Enum.map(&struct(Document, &1))
   end
 
-  def create(document, collection) do
-    create(document, collection, nil, [])
-  end
-
-  def create(document, collection, options) when is_list(options) do
-    create(document, collection, nil, options)
-  end
-  
-  def create(document, collection, database) when is_map(database) do
-    create(document, collection, database, [])
-  end
-
-  
-  # def create(document, collection, database\\nil, options\\[])
-
-
+  def create(document, collection), do: create(document, collection, nil, [])
+  def create(document, collection, options) when is_list(options), do: create(document, collection, nil, options)
+  def create(document, collection, database) when is_map(database), do: create(document, collection, database, [])
   def create(documents, collection, database, options) when is_list(documents) do
     data = Enum.map(documents, &Map.get(&1, :_data))
     url(collection.name, database, options)
-    |> Client.post(data)
+    |> post(data)
     |> Enum.map(&struct(Document, &1))
   end
-
   def create(document, collection, database, options) do
     url(collection.name, database, options)
-    |> Client.post(document._data)
+    |> post(document._data)
     |> case do
       %{new: new_doc} -> new_doc
       doc -> doc
@@ -51,21 +38,21 @@ defmodule Xarango.Document do
     |> to_document
   end
 
-  def destroy(document, options\\[])
-    
-  def destroy(documents, options) when is_list(documents) do
+  def destroy(document), do: destroy(document, nil, [])
+  def destroy(document, options) when is_list(options), do: destroy(document, nil, options)
+  def destroy(document, database) when is_map(database), do: destroy(document, database, [])    
+  def destroy(documents, database, options) when is_list(documents) do
     documents
     |> ids_per_collection
     |> Enum.reduce([], fn {coll_name, ids}, acc -> 
-      url(coll_name, options)
-      |> Client.delete(ids)
+      url(coll_name, database, options)
+      |> delete(ids)
       |> Kernel.++(acc)
     end)
   end
-
-  def destroy(document, options) do
-    url(document._id, options)
-    |> Client.delete
+  def destroy(document, database, options) do
+    url(document._id, database, options)
+    |> delete
   end
   
   def __destroy_all do
@@ -75,57 +62,46 @@ defmodule Xarango.Document do
     |> Enum.each(&destroy(&1))
   end
   
-  def update(documents, options\\[])
-  
-  def update(documents, options) when is_list(documents) do
+  def update(document), do: update(document, nil, [])
+  def update(document, options) when is_list(options), do: update(document, nil, options)
+  def update(document, database) when is_map(database), do: update(document, database, [])    
+  def update(documents, database, options) when is_list(documents) do
     documents
     |> docs_per_collection
     |> Enum.reduce([], fn {coll_name, docs}, acc -> 
-      url(coll_name, options)
-      |> Client.patch(docs)
+      url(coll_name, database, options)
+      |> patch(docs)
       |> Kernel.++(acc)
     end)
   end
-  
-  def update(document, options) do
-    url(document._id, options)
-    |> Client.patch(document._data)
+  def update(document, database, options) do
+    url(document._id, database, options)
+    |> patch(document._data)
     |> to_document
   end
   
-  def replace(documents, options\\[])
-
-  def replace(documents, options) when is_list(documents) do
+  def replace(document), do: replace(document, nil, [])
+  def replace(document, options) when is_list(options), do: replace(document, nil, options)
+  def replace(document, database) when is_map(database), do: replace(document, database, [])    
+  def replace(documents, database, options) when is_list(documents) do
     documents
     |> docs_per_collection
     |> Enum.reduce([], fn {coll_name, docs}, acc -> 
-      url(coll_name, options)
-      |> Client.put(docs)
+      url(coll_name, database, options)
+      |> put(docs)
       |> Kernel.++(acc)
     end)
   end
-  
-  def replace(document, options) do
-    url(document._id, options)
-    |> Client.put(document._data)
+  def replace(document, database, options) do
+    url(document._id, database, options)
+    |> put(document._data)
     |> to_document
   end
     
   def to_document(doc) do
-    struct(Document, Client.decode_data(doc, Document))
+    struct(Document, decode_data(doc, Document))
   end
 
-  defp url(path), do: url(path, nil, [])  
-  defp url(path, options) when is_list(options), do: url(path, nil, options)
-  defp url(path, database) when is_map(database), do: url(path, database, [])
-  # defp url(path, database\\nil, options\\[])
-  defp url(path, database, options) do
-    case database do
-      nil -> "/_api/document/#{path}"
-      db when is_map(db) -> "/_db/#{db.name}/_api/document/#{path}"
-    end
-    |> Xarango.Connection.url(options)
-  end
   
   defp docs_per_collection(documents) do
     documents

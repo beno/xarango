@@ -138,12 +138,12 @@ defmodule SimpleQueryTest do
     coll = Xarango.Collection.create(collection_)
     index = %Xarango.Index{type: "fulltext", fields: ["field"]}
       |> Xarango.Index.create(coll)
-    _documents(30, coll)
-    query = %SimpleQuery{collection: coll.name, query: "prefix:a", attribute: "field", limit: 100 }
+    _documents(4, coll, ["apple", "pear", "banana", "apricot"])
+    query = %SimpleQuery{collection: coll.name, query: "prefix:ap", attribute: "field", limit: 100 }
     result = SimpleQuery.fulltext(query)
     Xarango.Index.destroy(index)
     assert is_list(result)
-    assert length(result) > 0
+    assert length(result) == 2
   end
 
   defp _documents(count) do
@@ -155,7 +155,14 @@ defmodule SimpleQueryTest do
     docs = Enum.map(1..count, fn _ -> Document.create(document_, collection) end)
     {collection, docs}
   end
-
+  
+  defp _documents(count, collection, values) do
+    docs = Enum.map(1..count, fn ct ->
+      data = %{field: Enum.at(values, ct-1)}
+      Document.create(%Document{ document_ | _data: data}, collection)
+    end)
+    {collection, docs}
+  end
   
   defp _geo_documents(count, coll) do
     Enum.map(1..count, fn _ -> 

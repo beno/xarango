@@ -3,18 +3,14 @@ defmodule Xarango.Traversal do
   defstruct [:sort, :direction, :minDepth, :startVertex, :visitor, :itemOrder, 
     :strategy, :filter, :init, :maxIterations, :maxDepth, :uniqueness, :graphName, :expander, :edgeCollection]
   
-  alias Xarango.Client
+  import Xarango.Client
+  use Xarango.URI, [prefix: "traversal"]
   
   def traverse(traversal, options\\[]) do
     url("", options)
-    |> Client.post(traversal)
+    |> post(traversal)
     |> Xarango.TraversalResult.to_result
-  end
-  
-  defp url(path, options) do
-    Xarango.Connection.url("/_api/traversal/#{path}", options)
-  end
-  
+  end  
   
 end
 

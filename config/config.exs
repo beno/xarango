@@ -2,15 +2,12 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
-config :xarango, db_defaults: [
+config :xarango, db: [
   server: "http://localhost:8529",
   database: "_system",
-  db_version: 30000,
-]
-
-config :xarango, db_auth: [
+  version: 30000,
   username: System.get_env("ARANGO_USER"),
-  password: System.get_env("ARANGO_PASSWORD"),
+  password: System.get_env("ARANGO_PASSWORD")
 ]
 
 

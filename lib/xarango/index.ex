@@ -4,25 +4,22 @@ defmodule Xarango.Index do
     :geoJson, :constraint, :ignoreNull, :minLength, :error, :code]
   
   alias Xarango.Index
-  alias Xarango.Client
+  import Xarango.Client
+  use Xarango.URI, prefix: "index"
   
-  def create(%Index{type: type} = index, collection) when not is_nil(type) do
-    url("", collection: collection.name)
-    |> Client.post(index)
+  def create(%Index{type: type} = index, collection, database\\nil) when not is_nil(type) do
+    url("", database, collection: collection.name)
+    |> post(index)
     |> to_index
   end
   
-  def destroy(index) do
-    url(index.id)
-    |> Client.delete
+  def destroy(index, database\\nil) do
+    url(index.id, database)
+    |> delete
   end
   
   defp to_index(data) do
     struct(Index, data)
   end
-  
-  defp url(path, options\\[]) do
-    Xarango.Connection.url("/_api/index/#{path}", options)
-  end
-  
+    
 end

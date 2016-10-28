@@ -73,7 +73,7 @@ defmodule UserTest do
   end
   
   test "raise user" do
-    assert_raise RuntimeError, "username and/or password not set", fn ->
+    assert_raise Xarango.Error, "username and/or password not set", fn ->
       User.create(%User{})
     end
   end
