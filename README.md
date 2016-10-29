@@ -4,26 +4,36 @@ Elixir client library for ArangoDB.
 
 ## Usage
 
-Export username and password for your db user account:
+Configure xarango in `config/confix.exs`:
 
-    export ARANGO_USER=root
-    export ARANGO_PASSWORD=foobar
-    
-Run tests
+    config :xarango, db: [
+      server: "http://localhost:8529",
+      database: "test_db",
+      version: 30000,
+      username: System.get_env("ARANGO_USER"),
+      password: System.get_env("ARANGO_PASSWORD")
+    ]
 
-    mix test
+Set your credentials:
+
+    $ export ARANGO_USER=root
+    $ export ARANGO_PASSWORD=secret
+
+Run tests:
+
+    mix test # <= beware: running tests will destroy all data in the configured database.
     
 See tests for usage examples.
 
 ## Installation
 
-If [available in Hex](https://hex.pm/docs/publish), the package can be installed as:
+The package can be installed as:
 
   1. Add `xarango` to your list of dependencies in `mix.exs`:
 
     ```elixir
     def deps do
-      [{:xarango, "~> 0.1.0"}]
+      [{:xarango, "~> 0.2.0"}]
     end
     ```
 
