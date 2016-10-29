@@ -30,28 +30,26 @@ defmodule GraphTest do
   end
   
   test "destroy graph" do
-    graph = Graph.create(graph_)
-    result = Graph.destroy(graph)
+    result = Graph.create(graph_)
+      |> Graph.destroy
     assert result[:removed] == true
   end
   
   test "list vertex collections" do
-    graph = Graph.create(graph_)
-    result = Graph.vertex_collections(graph)
+    result = Graph.create(graph_)
+      |> Graph.vertex_collections
     assert is_list(result)
   end
   
-  # test "add vertex collection" do
-  #   collection = _collection
-  #   vertex = _vertex
-  #   graph = Graph.create(graph_)
-  #   graph = Graph.add_vertex_collection(graph, collection)
-  #   result = Graph.add_vertex(graph, collection, vertex)
-  #   Graph.destroy(graph)
-  #   assert vertex
-  # end
-  
-
+  test "list vertices" do
+    collection = vertex_collection_
+    graph = Graph.create(graph_)
+      |> Graph.add_vertex_collection(collection)
+    Xarango.Vertex.create(%Xarango.Vertex{_data: %{foo: "bar"}}, collection, graph)
+    Xarango.Vertex.create(%Xarango.Vertex{_data: %{bar: "foo"}}, collection, graph)
+    vertices = Xarango.VertexCollection.vertices(collection)
+    assert length(vertices) == 2
+  end
   
   test "add vertex collection" do
     collection = vertex_collection_

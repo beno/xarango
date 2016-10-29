@@ -6,7 +6,7 @@ defmodule Xarango.Graph do
   use Xarango.URI, prefix: "gharial"
   
   def graphs(database\\nil) do
-    url(database)
+    url("", database)
     |> get
     |> Map.get(:graphs)
     |> Enum.map(&to_graph(&1))
@@ -31,13 +31,14 @@ defmodule Xarango.Graph do
   
   def __destroy_all(database\\nil) do
     graphs(database)
-    |> Enum.each(&destroy(&1))
+    |> Enum.each(&destroy(&1, database))
   end
 
   def vertex_collections(graph, database\\nil) do
     url("#{graph.name}/vertex", database)
     |> get
     |> Map.get(:collections)
+    |> Enum.map(&struct(Xarango.VertexCollection, %{collection: &1}))
   end
   
   def add_vertex_collection(graph, collection, database\\nil) do
@@ -56,6 +57,7 @@ defmodule Xarango.Graph do
     url("#{graph.name}/edge", database)
     |> get
     |> Map.get(:collections)
+    |> Enum.map(&struct(Xarango.EdgeDefinition, %{collection: &1}))
   end
   
   def add_edge_definition(graph, edge_def, database\\nil) do
@@ -76,6 +78,7 @@ defmodule Xarango.Graph do
     |> to_graph
   end
   
+  
   def ensure(graph, database\\nil) do
     try do
       graph(graph, database)
@@ -89,7 +92,8 @@ defmodule Xarango.Graph do
       graph_data 
       |> Map.get(:graph, graph_data)
       |> ensure_name
-      |> to_edge_defs
+      |> to_edge_definitions
+      |> to_vertex_collections
     struct(Xarango.Graph, graph_data)
   end
   
@@ -102,27 +106,45 @@ defmodule Xarango.Graph do
     end
   end
   
-  defp to_edge_defs(graph_data) do
-    edges = graph_data[:edgeDefinitions] || []
-    graph_data
-    |> Map.put(:edgeDefinitions, Enum.map(edges, &struct(Xarango.EdgeDefinition, &1)))
+  defp to_edge_definitions(data) do
+    edge_definitions = data[:edgeDefinitions] || []
+    Map.put(data, :edgeDefinitions, Enum.map(edge_definitions, &struct(Xarango.EdgeDefinition, &1)))
+  end
+  
+  defp to_vertex_collections(data) do
+    vertex_collections = data[:orphanCollections] || []
+      |> Enum.map(&struct(Xarango.VertexCollection, &1))
+    Map.put(data, :orphanCollections, vertex_collections)
   end  
+
   
 end
 
 defmodule Xarango.VertexCollection do
+  # import Xarango.Client, only: [get: 1  ]
+  # use Xarango.URI, prefix: "document"
+
   
   defstruct [:collection]
   
+  def vertices(collection, database\\nil) do
+    Xarango.Document.documents(%{name: collection.collection}, database)
+    |> Enum.map(&to_vertex(&1))
+  end
+  
   def ensure(collection, graph, database\\nil) do
     graph = Xarango.Graph.ensure(graph, database)
-    IO.inspect Enum.member?(graph.orphanCollections, collection.collection)
     case Enum.member?(graph.orphanCollections, collection.collection) do
       false ->
         Xarango.Graph.add_vertex_collection(graph, collection, database)
         collection
       true -> collection
     end
+  end
+  
+  defp to_vertex(document) do
+    doc = Map.from_struct(document)
+    struct(Xarango.Vertex, doc) 
   end
   
 end
