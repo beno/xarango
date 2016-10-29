@@ -18,7 +18,7 @@ defmodule Xarango.Domain.Document do
       defp database, do: %Xarango.Database{name: unquote(db)}
       defp collection, do: %Xarango.Collection{name: unquote(coll)}
       def create(data, options\\[]) do
-        Xarango.Database.ensure(database)
+        database = Xarango.Database.ensure(database)
         Xarango.Collection.ensure(collection, database)
         doc = Document.create(%Document{_data: data}, collection, database) |> Document.document(database)
         struct(__MODULE__, doc: doc)
@@ -26,6 +26,10 @@ defmodule Xarango.Domain.Document do
       def one(params) do
         document = SimpleQuery.first_example(%SimpleQuery{example: params, collection: collection.name}, database)
         struct(__MODULE__, doc: document)
+      end
+      def list(params) do
+        SimpleQuery.by_example(%SimpleQuery{example: params, collection: collection.name}, database)
+        |> Enum.map(&struct(__MODULE__, doc: &1))
       end
       def replace(params, data) do
         doc = %{ one(params).doc | _data: data }

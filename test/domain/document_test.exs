@@ -32,6 +32,25 @@ defmodule DomainDocumentTest do
     assert model.doc._data == %{jabba: "dabba"}
   end
   
+  test "get model list" do
+    source = TestModel.create(%{jabba: "dabba"})
+    TestModel.create(%{dabba: "doo"})
+    models = TestModel.list(%{jabba: "dabba"})
+    assert is_list(models)
+    assert length(models) == 1
+    assert Enum.at(models, 0).doc._data == source.doc._data
+  end
+  
+  test "list models in db" do
+    source = TestDbModel.create(%{jabba: "dabba"})
+    TestDbModel.create(%{dabba: "doo"})
+    models = TestDbModel.list(%{jabba: "dabba"})
+    assert is_list(models)
+    assert length(models) == 1
+    assert Enum.at(models, 0)._data == source._data
+  end
+
+  
   test "replace model" do
     source = TestModel.create(%{jabba: "dabba"})
     model = TestModel.replace(%{_id: source.doc._id},  %{foo: "bar"})
