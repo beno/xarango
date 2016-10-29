@@ -12,13 +12,13 @@ defmodule Xarango.SimpleQuery do
   def all(query, database\\nil) do
     url("all", database)
     |> put(query)
-    |> to_result
+    |> to_documents
   end
   
   def by_example(%SimpleQuery{example: example} = query, database\\nil) when not is_nil(example) do
     url("by-example", database)
     |> put(query)
-    |> to_result
+    |> to_documents
   end
   
   def first_example(%SimpleQuery{example: example} = query, database\\nil) when not is_nil(example) do
@@ -105,9 +105,9 @@ defmodule Xarango.SimpleQuery do
     |> Map.get(:result)
     |> Enum.map(&Document.to_document(&1))
   end
-    
-  defp to_result(data) do
-    struct(Xarango.QueryResult, data)
-  end
+  #   
+  # defp to_result(data) do
+  #   struct(Xarango.QueryResult, data)
+  # end
   
 end
