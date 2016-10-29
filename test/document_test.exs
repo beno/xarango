@@ -18,6 +18,13 @@ defmodule DocumentTest do
     document = Document.create(document_, collection)
     assert String.starts_with?(document._id, collection.name <> "/")
   end
+  
+  test "create document with key" do
+    collection = Collection.create(collection_)
+    document = %Document{ document_ | _key: "foobar"}
+    document = Document.create(document, collection)
+    assert document._key == "foobar"
+  end
 
   test "read document" do
     source = document_
