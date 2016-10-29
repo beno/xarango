@@ -10,49 +10,49 @@ defmodule Xarango.Collection do
     url("", database)
     |> get
     |> Map.get(:result)
-    |> Enum.map(&struct(Collection, &1))
+    |> Enum.map(&to_collection(&1))
   end
 
   def collection(collection, database\\nil) do
     url(collection.name, database)
     |> get
-    |> parse_coll
+    |> to_collection
   end
     
   def properties(collection, database\\nil) do
     url("#{collection.name}/properties", database)
     |> get
-    |> parse_coll
+    |> to_collection
   end
   
   def count(collection, database\\nil) do
     url("#{collection.name}/count", database)
     |> get
-    |> parse_coll
+    |> to_collection
   end
   
   def figures(collection, database\\nil) do
     url("#{collection.name}/figures", database)
     |> get
-    |> parse_coll
+    |> to_collection
   end
   
   def revision(collection, database\\nil) do
     url("#{collection.name}/revision", database)
     |> get
-    |> parse_coll
+    |> to_collection
   end
   
   def checksum(collection, database\\nil) do
     url("#{collection.name}/checksum", database)
     |> get
-    |> parse_coll
+    |> to_collection
   end
   
   def create(collection, database\\nil) do
     url("", database)
     |> post(collection)
-    |> parse_coll
+    |> to_collection
   end
   
   def destroy(collection, database\\nil) do
@@ -68,22 +68,14 @@ defmodule Xarango.Collection do
     end
   end
   
-  def __destroy_all do
-    collections
+  def __destroy_all(database\\nil) do
+    collections(database)
     |> Enum.reject(&Map.get(&1, :isSystem))
-    |> Enum.each(&destroy(&1))
+    |> Enum.each(&destroy(&1, database))
   end
-  
-  # defp url(path, database) do
-  #   case database do
-  #     nil -> "/_api/collection/#{path}"
-  #     db -> "/_db/#{db.name}/_api/collection/#{path}"
-  #   end
-  #   |> Xarango.Client._url
-  # end
-  
-  defp parse_coll(coll) do
-    struct(Collection, coll)
+    
+  defp to_collection(data) do
+    struct(Collection, data)
   end
 end
 
