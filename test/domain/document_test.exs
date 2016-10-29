@@ -4,8 +4,8 @@ defmodule DomainDocumentTest do
 
   setup do
     on_exit fn ->
-      try do Xarango.Collection.destroy(%Xarango.Collection{name: "test_collection"}) rescue _ -> nil end
-      try do Xarango.Collection.destroy(%Xarango.Collection{name: "test_collection"}, _database) rescue _ -> nil end
+      try do Xarango.Collection.destroy(_collection) rescue _ -> nil end
+      try do Xarango.Collection.destroy(_collection, _database) rescue _ -> nil end
       try do Xarango.Database.destroy(_database) rescue _ -> nil end
     end
   end
@@ -47,7 +47,7 @@ defmodule DomainDocumentTest do
     models = TestDbModel.list(%{jabba: "dabba"})
     assert is_list(models)
     assert length(models) == 1
-    assert Enum.at(models, 0)._data == source._data
+    assert Enum.at(models, 0).doc._data == source.doc._data
   end
 
   
@@ -95,6 +95,11 @@ defmodule DomainDocumentTest do
   defp _database do
     %Xarango.Database{name: "test_db"}
   end
+  
+  defp _collection do
+    %Xarango.Collection{name: "test_collection"}
+  end
+
   
 end
 
