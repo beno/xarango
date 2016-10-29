@@ -15,22 +15,19 @@ defmodule Xarango.Document do
   def documents(collection, database\\nil) do
     %Xarango.SimpleQuery{collection: collection.name}
     |> Xarango.SimpleQuery.all(database)
-    |> Map.get(:result)
-    |> Enum.map(&struct(Document, &1))
   end
 
   def create(document, collection), do: create(document, collection, nil, [])
   def create(document, collection, options) when is_list(options), do: create(document, collection, nil, options)
   def create(document, collection, database) when is_map(database), do: create(document, collection, database, [])
   def create(documents, collection, database, options) when is_list(documents) do
-    data = Enum.map(documents, &Map.get(&1, :_data))
     url(collection.name, database, options)
-    |> post(data)
+    |> post(documents)
     |> Enum.map(&struct(Document, &1))
   end
   def create(document, collection, database, options) do
     url(collection.name, database, options)
-    |> post(document._data)
+    |> post(document)
     |> case do
       %{new: new_doc} -> new_doc
       doc -> doc
