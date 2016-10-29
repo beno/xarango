@@ -6,32 +6,32 @@ defmodule Xarango.Vertex do
   import Xarango.Client
   use Xarango.URI, prefix: "gharial"
   
-  def vertex(graph, collection, vertex) do
-    url("#{graph.name}/vertex/#{collection.collection}/#{vertex._key}")
+  def vertex(vertex, collection, graph, database\\nil) do
+    url("#{graph.name}/vertex/#{collection.collection}/#{vertex._key}", database)
     |> get
     |> to_vertex
   end 
   
-  def create(graph, collection, vertex) do
-    url("#{graph.name}/vertex/#{collection.collection}")
+  def create(vertex, collection, graph, database\\nil) do
+    url("#{graph.name}/vertex/#{collection.collection}", database)
     |> post(vertex._data)
     |> to_vertex
   end
   
-  def update(graph, collection, vertex) do
-    url("#{graph.name}/vertex/#{collection.collection}/#{vertex._key}")
+  def update(vertex, collection, graph, database\\nil) do
+    url("#{graph.name}/vertex/#{collection.collection}/#{vertex._key}", database)
     |> patch(vertex._data)
     |> to_vertex
   end
   
-  def replace(graph, collection, vertex) do
-    url("#{graph.name}/vertex/#{collection.collection}/#{vertex._key}")
+  def replace(vertex, collection, graph, database\\nil) do
+    url("#{graph.name}/vertex/#{collection.collection}/#{vertex._key}", database)
     |> put(vertex._data)
     |> to_vertex
   end
   
-  def destroy(graph, collection, vertex) do
-    url("#{graph.name}/vertex/#{collection.collection}/#{vertex._key}")
+  def destroy(vertex, collection, graph, database\\nil) do
+    url("#{graph.name}/vertex/#{collection.collection}/#{vertex._key}", database)
     |> delete
   end 
   

@@ -13,19 +13,16 @@ defmodule SimpleQueryTest do
   end
   
   test "all" do
-    length = 3
-    {coll, _} = _documents(length)
-    result = SimpleQuery.all(%SimpleQuery{collection: coll.name})
-    assert result.error == false
-    assert length(result.result) == length
+    {coll, _} = _documents(3)
+    docs = SimpleQuery.all(%SimpleQuery{collection: coll.name})
+    assert length(docs) == 3
   end
   
   test "by example" do
     {coll, docs} = _documents(3)
     example = Enum.at(docs, 0) |> Document.document |> Map.get(:_data)
-    result = SimpleQuery.by_example(%SimpleQuery{collection: coll.name, example: example})
-    assert result.error == false
-    assert length(result.result) == 1
+    docs = SimpleQuery.by_example(%SimpleQuery{collection: coll.name, example: example})
+    assert length(docs) == 1
   end
   
   test "first example" do

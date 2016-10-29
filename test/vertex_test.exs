@@ -16,8 +16,8 @@ defmodule VertexTest do
   test "create vertex" do
     collection = vertex_collection_
     graph = Graph.create(graph_)
-    graph = Graph.add_vertex_collection(graph, collection)
-    result = Vertex.create(graph, collection, vertex_)
+      |> Graph.add_vertex_collection(collection)
+    result = Vertex.create(vertex_, collection, graph)
     assert String.starts_with?(result._id, collection.collection)
   end
   
@@ -25,9 +25,9 @@ defmodule VertexTest do
     source = vertex_
     collection = vertex_collection_
     graph = Graph.create(graph_)
-    graph = Graph.add_vertex_collection(graph, collection)
-    vertex = Vertex.create(graph, collection, source)
-    result = Vertex.vertex(graph, collection, vertex)
+      |> Graph.add_vertex_collection(collection)
+    vertex = Vertex.create(source, collection, graph)
+    result = Vertex.vertex(vertex, collection, graph)
     assert source._data == result._data
   end
   
@@ -36,11 +36,11 @@ defmodule VertexTest do
     source = vertex_
     collection = vertex_collection_
     graph = Graph.create(graph_)
-    graph = Graph.add_vertex_collection(graph, collection)
-    vertex = Vertex.create(graph, collection, source)
-    newvertex_ = %Vertex{ vertex | _data: new_data}
-    vertex = Vertex.update(graph, collection, newvertex_)
-    vertex = Vertex.vertex(graph, collection, vertex)
+      |> Graph.add_vertex_collection(collection)
+    vertex = Vertex.create(source, collection, graph)
+    new_vertex = %Vertex{ vertex | _data: new_data}
+    vertex = Vertex.update(new_vertex, collection, graph)
+    vertex = Vertex.vertex(vertex, collection, graph)
     assert vertex._data == Map.merge(source._data, new_data)
   end
   
@@ -49,20 +49,20 @@ defmodule VertexTest do
     source = vertex_
     collection = vertex_collection_
     graph = Graph.create(graph_)
-    graph = Graph.add_vertex_collection(graph, collection)
-    vertex = Vertex.create(graph, collection, source)
-    newvertex_ = %Vertex{ vertex | _data: new_data}
-    vertex = Vertex.replace(graph, collection, newvertex_)
-    vertex = Vertex.vertex(graph, collection, vertex)
+      |> Graph.add_vertex_collection(collection)
+    vertex = Vertex.create(source, collection, graph)
+    new_vertex = %Vertex{ vertex | _data: new_data}
+    vertex = Vertex.replace(new_vertex, collection, graph)
+    vertex = Vertex.vertex(vertex, collection, graph)
     assert vertex._data == new_data
   end
   
   test "destroy vertex" do
     collection = vertex_collection_
     graph = Graph.create(graph_)
-    graph = Graph.add_vertex_collection(graph, collection)
-    vertex = Vertex.create(graph, collection, vertex_)
-    result = Vertex.destroy(graph, collection, vertex)
+      |> Graph.add_vertex_collection(collection)
+    vertex = Vertex.create(vertex_, collection, graph)
+    result = Vertex.destroy(vertex, collection, graph)
     assert result[:error] == false
     assert result[:removed] == true
   end

@@ -31,7 +31,7 @@ defmodule TraversalTest do
     g = Graph.create(graph_)
       |> Graph.add_vertex_collection(vc)
       |> Graph.add_edge_definition(%Xarango.EdgeDefinition{collection: ec.collection, from: [vc.collection], to: [vc.collection]})
-    [alice, bob, charlie, dave, eve] = Enum.map(~w{alice, bob, charlie, dave, eve}, &Vertex.create(g, vc, person(&1)))
+    [alice, bob, charlie, dave, eve] = Enum.map(~w{alice, bob, charlie, dave, eve}, &Vertex.create(person(&1), vc, g))
     [
       %Edge{_from: alice._id, _to: bob._id},
       %Edge{_from: bob._id, _to: charlie._id},
@@ -40,7 +40,7 @@ defmodule TraversalTest do
       %Edge{_from: eve._id, _to: bob._id}
     ]
     |> Enum.each(fn e ->
-      Edge.create(g, ec, e)
+      Edge.create(e, ec, g)
     end)
     {g, alice}
   end

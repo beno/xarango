@@ -56,14 +56,14 @@ defmodule GraphTest do
   test "add vertex collection" do
     collection = vertex_collection_
     graph = Graph.create(graph_)
-    result = Graph.add_vertex_collection(graph, collection)
-    assert result.orphanCollections == [collection.collection]
+      |> Graph.add_vertex_collection(collection)
+    assert graph.orphanCollections == [collection.collection]
   end
   
   test "remove vertex collection" do
     collection = vertex_collection_
     graph = Graph.create(graph_)
-    graph = Graph.add_vertex_collection(graph, collection)
+      |> Graph.add_vertex_collection(collection)
     graph = Graph.remove_vertex_collection(graph, collection)
     assert graph.orphanCollections == []
   end
@@ -77,14 +77,14 @@ defmodule GraphTest do
   test "add edge definition" do
     edge_def = edge_def_
     graph = Graph.create(graph_)
-    result = Graph.add_edge_definition(graph, edge_def)
-    assert Enum.member?(result.edgeDefinitions, edge_def)
+      |> Graph.add_edge_definition(edge_def)
+    assert Enum.member?(graph.edgeDefinitions, edge_def)
   end
 
   test "replace edge definition" do
     edge_def = edge_def_
     graph = Graph.create(graph_)
-    graph = Graph.add_edge_definition(graph, edge_def)
+      |> Graph.add_edge_definition(edge_def)
     edge_def = %Xarango.EdgeDefinition{edge_def | to: ["jabba"]}
     result = Graph.replace_edge_definition(graph, edge_def)
     assert Enum.member?(result.edgeDefinitions, edge_def)
@@ -93,14 +93,10 @@ defmodule GraphTest do
   test "remove edge definition" do
     edge_def = edge_def_
     graph = Graph.create(graph_)
-    graph = Graph.add_edge_definition(graph, edge_def)
+      |> Graph.add_edge_definition(edge_def)
     assert Enum.member?(graph.edgeDefinitions, edge_def)
     graph = Graph.remove_edge_definition(graph, edge_def)
     refute Enum.member?(graph.edgeDefinitions, edge_def)
   end
-
-  # defp _graph do
-  #   %Graph{ graph_ | edgeDefinitions: [%{collection: name_, from: ["start"], to: ["end"] }
-  # end
 
 end
