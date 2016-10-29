@@ -7,10 +7,7 @@ defmodule Xarango.Domain.Document do
     quote do
       require Xarango.Domain.Document
       import Xarango.Domain.Document
-      
       defstruct doc: %Xarango.Document{}
-      # def database, do: unquote(options[:database]) || 
-      # Module.register_attribute(__MODULE__, :fields, accumulate: true)
     end
   end
   
