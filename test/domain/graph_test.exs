@@ -41,12 +41,49 @@ defmodule DomainGraphTest do
     TestGraph.add_likes(alice, bob)
     TestGraph.add_likes(alice, jim)
     TestGraph.add_likes(bob, alice)
-    alice_likes = TestGraph.likes!(alice)
-    alice_liked_by = TestGraph.likes?(alice)
+    alice_likes = TestGraph.likes_person(alice)
+    alice_liked_by = TestGraph.person_likes(alice)
     assert length(alice_likes) == 2
     assert length(alice_liked_by) == 1
   end
+  
+  test "list db relationships" do
+    TestDbGraph.create
+    alice = DbPerson.create(%{name: "Alice"})
+    bob = DbPerson.create(%{name: "Bob"})
+    jim = DbPerson.create(%{name: "Jim"})
+    TestDbGraph.add_likes(alice, bob)
+    TestDbGraph.add_likes(alice, jim)
+    TestDbGraph.add_likes(bob, alice)
+    alice_likes = TestDbGraph.likes_db_person(alice)
+    alice_liked_by = TestDbGraph.db_person_likes(alice)
+    assert length(alice_likes) == 2
+    assert length(alice_liked_by) == 1
+  end
+  
+  test "remove relationships" do
+    TestGraph.create
+    alice = Person.create(%{name: "Alice"})
+    bob = Person.create(%{name: "Bob"})
+    TestGraph.add_likes(alice, bob)
+    result = TestGraph.remove_likes(alice, bob)
+    alice_likes = TestGraph.likes_person(alice)
+    assert length(result) == 1
+    assert Enum.at(result, 0)[:removed] == true
+    assert length(alice_likes) == 0
+  end
 
+  test "remove db relationships" do
+    TestDbGraph.create
+    alice = DbPerson.create(%{name: "Alice"})
+    bob = DbPerson.create(%{name: "Bob"})
+    TestDbGraph.add_likes(alice, bob)
+    result = TestDbGraph.remove_likes(alice, bob)
+    alice_likes = TestDbGraph.likes_db_person(alice)
+    assert length(result) == 1
+    assert Enum.at(result, 0)[:removed] == true
+    assert length(alice_likes) == 0
+  end
 
   test "create db graph" do
     graph = TestDbGraph.create
@@ -56,14 +93,15 @@ defmodule DomainGraphTest do
   
   test "add db relationships" do
     TestDbGraph.create
-    p1 = DbPerson.create(%{name: "Alice"})
-    p2 = DbPerson.create(%{name: "Bob"})
-    car = DbCar.create(%{type: "Outback"})
-    brand = DbBrand.create(%{name: "Subaru"})
-    likes = TestDbGraph.add_likes(p1, p2)
-    has_brand = TestDbGraph.add_has_brand(car, brand)
-    assert String.starts_with?(likes._id, "likes/")
-    assert String.starts_with?(has_brand._id, "has_brand/")
+    outback = DbCar.create(%{type: "Outback"})
+    impreza = DbCar.create(%{type: "Impreza"})
+    subaru = DbBrand.create(%{name: "Subaru"})
+    TestDbGraph.add_has_brand(outback, subaru)
+    TestDbGraph.add_has_brand(impreza, subaru)
+    subaru_cars = TestDbGraph.db_car_has_brand(subaru)
+    outback_brands = TestDbGraph.has_brand_db_brand(outback)
+    assert length(outback_brands) == 1
+    assert length(subaru_cars) == 2
   end
 
   

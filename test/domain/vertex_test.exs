@@ -15,7 +15,23 @@ defmodule DomainVertexTest do
     vertex = TestVertex.create(%{jabba: "dabba"})
     assert vertex.vertex._data == %{jabba: "dabba"}
   end
+
+  test "create vertex in graph" do
+    vertex = TestVertex.create(%{jabba: "dabba"}, :test2_db)
+    assert vertex.vertex._data == %{jabba: "dabba"}
+  end
   
+  test "create no graph vertex in graph" do
+    vertex = TestNoGraphVertex.create(%{jabba: "dabba"}, :test2_db)
+    assert vertex.vertex._data == %{jabba: "dabba"}
+  end
+
+  test "error when graph not set" do
+    assert_raise Xarango.Error, fn ->
+      TestNoGraphVertex.create(%{jabba: "dabba"})
+    end
+  end
+
   test "create vertex in db" do
     vertex = TestDbVertex.create(%{jabba: "dabba"})
     assert vertex.vertex._data == %{jabba: "dabba"} 
@@ -54,37 +70,37 @@ defmodule DomainVertexTest do
   
   test "replace model" do
     source = TestVertex.create(%{jabba: "dabba"})
-    model = TestVertex.replace(%{_id: source.vertex._id},  %{foo: "bar"})
+    model = TestVertex.replace(source,  %{foo: "bar"})
     assert model.vertex._data == %{foo: "bar"}
   end
   
   test "replace in db" do
     source = TestDbVertex.create(%{jabba: "dabba"})
-    model = TestDbVertex.replace(%{_id: source.vertex._id},  %{foo: "bar"})
+    model = TestDbVertex.replace(source,  %{foo: "bar"})
     assert model.vertex._data == %{foo: "bar"}
   end
   
   test "update model" do
     source = TestVertex.create(%{jabba: "dabba"})
-    model = TestVertex.update(%{_id: source.vertex._id},  %{foo: "bar"})
+    model = TestVertex.update(source,  %{foo: "bar"})
     assert model.vertex._data == %{jabba: "dabba", foo: "bar"}
   end
   
   test "update in db" do
     source = TestDbVertex.create(%{jabba: "dabba"})
-    model = TestDbVertex.update(%{_id: source.vertex._id},  %{foo: "bar"})
+    model = TestDbVertex.update(source,  %{foo: "bar"})
     assert model.vertex._data == %{jabba: "dabba", foo: "bar"}
   end
   
   test "destroy model" do
     source = TestVertex.create(%{jabba: "dabba"})
-    result = TestVertex.destroy(%{_id: source.vertex._id})
+    result = TestVertex.destroy(source)
     assert result[:removed] == true
   end
   
   test "destroy in db" do
     source = TestDbVertex.create(%{jabba: "dabba"})
-    result = TestDbVertex.destroy(%{_id: source.vertex._id})
+    result = TestDbVertex.destroy(source)
     assert result[:removed] == true
   end
   
@@ -97,6 +113,9 @@ defmodule DomainVertexTest do
   
 end
 
+defmodule TestNoGraphVertex do
+  use Xarango.Domain.Vertex
+end
 
 defmodule TestVertex do
   use Xarango.Domain.Vertex, graph: :test_graph
