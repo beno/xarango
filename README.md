@@ -23,7 +23,33 @@ Run tests:
 
     mix test # <= beware: running tests will destroy all data in the configured database.
     
-See tests for usage examples.
+# Example Document
+
+```elixir
+defmodule Car, do: use Xarango.Domain.Vertex, graph: :vehicles
+defmodule Brand, do: use Xarango.Domain.Vertex, graph: :vehicles
+defmodule Vehicles do
+  use Xarango.Domain.Graph
+  
+  relationship :car, :has_brand, :brand
+end
+
+Vehicles.create
+outback = Car.create(%{type: "Outback"})
+impreza = Car.create(%{type: "Impreza"})
+subaru = Brand.create(%{name: "Subaru"})
+Vehicles.add_has_brand(outback, subaru)
+Vehicles.add_has_brand(impreza, subaru)
+
+Vehicles.has_brand!(outback) #=> [%Brand{...}]
+Vehicles.has_brand?(subaru) #=> [%Car{...}, %Car{...}]
+
+
+
+
+```
+
+See tests for detailed usage examples.
 
 ## Installation
 

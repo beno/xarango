@@ -159,6 +159,21 @@ defmodule Xarango.EdgeDefinition do
 
   defstruct [:collection, :from, :to]
 
+  def ensure(edge_definition, graph, database\\nil) do
+    graph = Xarango.Graph.ensure(graph, database)
+    Enum.find(graph.edgeDefinitions, fn edge_def ->
+      edge_def.collection == edge_definition.collection && 
+      edge_def.from -- (edge_def.from -- edge_definition.from) != [] && 
+      edge_def.to -- (edge_def.to -- edge_definition.to) != [] 
+    end)
+    |> case do
+      nil ->
+        Xarango.Graph.add_edge_definition(graph, edge_definition, database)
+        edge_definition
+      edge_def -> edge_def
+    end
+  end
+
 end
 
 

@@ -5,7 +5,6 @@ defmodule Xarango.Domain.Document do
   
   defmacro __using__(_options) do
     quote do
-      require Xarango.Domain.Document
       import Xarango.Domain.Document
       defstruct doc: %Xarango.Document{}
     end

@@ -12,6 +12,14 @@ defmodule Xarango.Vertex do
     |> to_vertex
   end 
   
+  def edges(vertex, edge_collection, database\\nil, options\\[]) do
+    options = Keyword.merge(options, [vertex: vertex._id])
+    Xarango.Client._url(Xarango.URI.path("edges/#{edge_collection.collection}", database), options)
+    |> get
+    |> Map.get(:edges)
+    |> Enum.map(&Xarango.Edge.to_edge(&1))
+  end
+  
   def create(vertex, collection, graph, database\\nil) do
     url("#{graph.name}/vertex/#{collection.collection}", database)
     |> post(vertex._data)
@@ -33,7 +41,15 @@ defmodule Xarango.Vertex do
   def destroy(vertex, collection, graph, database\\nil) do
     url("#{graph.name}/vertex/#{collection.collection}/#{vertex._key}", database)
     |> delete
-  end 
+  end
+  
+  def ensure(vertex, collection, graph, database\\nil) do
+    try do
+      vertex(vertex, collection, graph, database)
+    rescue
+      Xarango.Error -> create(vertex, collection, graph, database)
+    end
+  end
   
   def to_vertex(data) do
     data = Map.get(data, :vertex, data)

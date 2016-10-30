@@ -93,25 +93,17 @@ defmodule DomainVertexTest do
     assert model[:jabba] == "dabba"
   end
 
-  
   defp _database, do: %Xarango.Database{name: "test_database"}
-  # defp _vertex_collection, do: %Xarango.VertexCollection{collection: "test_collection"}
   
 end
 
 
 defmodule TestVertex do
-  use Xarango.Domain.Vertex
-  
-  collection :test_collection, :test_graph
-  
+  use Xarango.Domain.Vertex, graph: :test_graph
 end
 
 defmodule TestDbVertex do
-  use Xarango.Domain.Vertex
-
-  collection :test_collection, :test_graph, :test_database
-
+  use Xarango.Domain.Vertex, graph: :test_graph, db: :test_database
 end
 
 

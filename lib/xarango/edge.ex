@@ -11,12 +11,6 @@ defmodule Xarango.Edge do
     |> get
     |> to_edge
   end 
-  
-  # def edges(collection, database\\nil, [vertex: vertex] = options) do
-  #   url(collection.id, database, options)
-  #   |> get
-  #   |> Enum.map(&to_edge(&1))
-  # end
 
   def create(edge, collection, graph, database\\nil) do
     url("#{graph.name}/edge/#{collection.collection}", database)

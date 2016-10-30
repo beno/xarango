@@ -3,51 +3,48 @@ defmodule Xarango.Domain.Vertex do
   alias Xarango.Vertex
   alias Xarango.SimpleQuery
   
-  defmacro __using__(_options) do
+  
+  defmacro __using__(options) do
+    db = options[:db] && Atom.to_string(options[:db]) || Xarango.Server.server.database
+    gr = options[:graph] || raise Xarango.Error, message: "graph not set for #{__MODULE__}"
     quote do
-      require Xarango.Domain.Vertex
-      import Xarango.Domain.Vertex
-      defstruct vertex: %Xarango.Vertex{}
-    end
-  end
-    
-  defmacro collection(coll, gr, db\\nil) do
-    coll = Atom.to_string(coll)
-    gr = Atom.to_string(gr)
-    db = db && Atom.to_string(db) || Xarango.Server.server.database
-    quote do
-      defp database, do: %Xarango.Database{name: unquote(db)}
-      defp graph, do: %Xarango.Graph{name: unquote(gr)}
-      defp collection, do: %Xarango.VertexCollection{collection: unquote(coll)}
-      def create(data, options\\[]) do
-        database = Xarango.Database.ensure(database)
-        vc = Xarango.VertexCollection.ensure(collection, graph, database)
-        vertex = Vertex.create(%Vertex{_data: data}, vc, graph, database) |> Vertex.vertex(vc, graph, database)
+     defstruct vertex: %Xarango.Vertex{}
+      
+      defp _database, do: %Xarango.Database{name: unquote(db)}
+      defp _graph, do: %Xarango.Graph{name: unquote(gr)}
+      defp _collection do
+        coll = __MODULE__ |> Module.split |> List.last |> Macro.underscore
+        %Xarango.VertexCollection{collection: coll}
+      end
+      def create(data) do
+        Xarango.Database.ensure(_database)
+        vc = Xarango.VertexCollection.ensure(_collection, _graph, _database)
+        vertex = Vertex.create(%Vertex{_data: data}, vc, _graph, _database) |> Vertex.vertex(vc, _graph, _database)
         struct(__MODULE__, vertex: vertex)
       end
       def one(params) do
-        document = SimpleQuery.first_example(%SimpleQuery{example: params, collection: collection.collection}, database)
+        document = SimpleQuery.first_example(%SimpleQuery{example: params, collection: _collection.collection}, _database)
         struct(__MODULE__, vertex: to_vertex(document))
       end
       def list(params) do
-        SimpleQuery.by_example(%SimpleQuery{example: params, collection: collection.collection}, database)
+        SimpleQuery.by_example(%SimpleQuery{example: params, collection: _collection.collection}, _database)
         |> Enum.map(&struct(__MODULE__, vertex: to_vertex(&1)))
       end
       def replace(params, data) do
         vertex = %{ one(params).vertex | _data: data }
-          |> Vertex.replace(collection, graph, database)
-          |> Vertex.vertex(collection, graph, database)
+          |> Vertex.replace(_collection, _graph, _database)
+          |> Vertex.vertex(_collection, _graph, _database)
         struct(__MODULE__, vertex: vertex)
       end
       def update(params, data) do
         vertex = %{ one(params).vertex | _data: data }
-          |> Vertex.update(collection, graph, database)
-          |> Vertex.vertex(collection, graph, database)
+          |> Vertex.update(_collection, _graph, _database)
+          |> Vertex.vertex(_collection, _graph, _database)
         struct(__MODULE__, vertex: vertex)
       end
       def destroy(params) do
         one(params).vertex
-        |> Vertex.destroy(collection, graph, database)
+        |> Vertex.destroy(_collection, _graph, _database)
       end
       def fetch(vertex, field) do
         value = vertex.vertex._data
@@ -58,9 +55,7 @@ defmodule Xarango.Domain.Vertex do
         doc = Map.from_struct(document)
         struct(Xarango.Vertex, doc) 
       end
-
-
     end
   end
-  
+      
 end
