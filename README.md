@@ -23,11 +23,30 @@ Run tests:
 
     mix test # <= beware: running tests will destroy all data in the configured database.
     
-# Example Document
+## Example Document
 
 ```elixir
+defmodule Article, do: use Xarango.Domain.Document
+
+lorem = Article.create(%{author: "Author", text: "Lorem"})
+ipsum = Article.create(%{author: "Author", text: "Lorem"})
+
+IO.inspect lorem[:text] #=> "Lorem"
+
+Article.list(%{author: "Author"}) #=> [%Article{...}, %Article{...}]
+
+Article.update(ipsum, %{status: "review"})
+
+Article.destroy(ipsum)
+
+```
+
+
+## Example Graph
+
+```elixir
+defmodule Brand, do: use Xarango.Domain.Vertex
 defmodule Car, do: use Xarango.Domain.Vertex, graph: :vehicles
-defmodule Brand, do: use Xarango.Domain.Vertex, graph: :vehicles
 defmodule Vehicles do
   use Xarango.Domain.Graph
   
@@ -35,21 +54,27 @@ defmodule Vehicles do
 end
 
 Vehicles.create
+subaru = Brand.create(%{name: "Subaru"}, :vehicles)
 outback = Car.create(%{type: "Outback"})
 impreza = Car.create(%{type: "Impreza"})
-subaru = Brand.create(%{name: "Subaru"})
+
+IO.inspect subaru[:name] #=> "Subaru"
+IO.inspect outback[:type] #=> "Outback"
+
 Vehicles.add_has_brand(outback, subaru)
 Vehicles.add_has_brand(impreza, subaru)
 
-Vehicles.has_brand!(outback) #=> [%Brand{...}]
-Vehicles.has_brand?(subaru) #=> [%Car{...}, %Car{...}]
+Vehicles.car_has_brand(subaru) #=> [%Car{...}, %Car{...}] #outbound edges for car
+Vehicles.has_brand_brand(outback) #=> [%Brand{...}] #inbound edges for brand
 
+Vehicles.remove_has_brand(impreza, subaru)
 
+Vehicles.car_has_brand(subaru) #=> [%Car{...}]
 
 
 ```
 
-See tests for detailed usage examples.
+See tests for low level usage examples.
 
 ## Installation
 
@@ -59,7 +84,7 @@ The package can be installed as:
 
     ```elixir
     def deps do
-      [{:xarango, "~> 0.2.0"}]
+      [{:xarango, "~> 0.2.1"}]
     end
     ```
 
