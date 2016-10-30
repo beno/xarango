@@ -4,8 +4,8 @@ defmodule DomainDocumentTest do
 
   setup do
     on_exit fn ->
-      try do Xarango.Collection.destroy(_collection) rescue _ -> nil end
-      try do Xarango.Collection.destroy(_collection, _database) rescue _ -> nil end
+      try do Xarango.Collection.__destroy_all() rescue _ -> nil end
+      try do Xarango.Collection.__destroy_all(_database) rescue _ -> nil end
       try do Xarango.Database.destroy(_database) rescue _ -> nil end
     end
   end
@@ -14,6 +14,12 @@ defmodule DomainDocumentTest do
     model = TestModel.create(%{jabba: "dabba"})
     assert model.doc._data == %{jabba: "dabba"} 
   end
+  
+  test "create model in graph" do
+    model = TestModel.create(%{jabba: "dabba"})
+    assert model.doc._data == %{jabba: "dabba"} 
+  end
+
 
   test "create model in db" do
     model = TestDbModel.create(%{jabba: "dabba"})
@@ -53,37 +59,37 @@ defmodule DomainDocumentTest do
   
   test "replace model" do
     source = TestModel.create(%{jabba: "dabba"})
-    model = TestModel.replace(%{_id: source.doc._id},  %{foo: "bar"})
+    model = TestModel.replace(source,  %{foo: "bar"})
     assert model.doc._data == %{foo: "bar"}
   end
   
   test "replace in db" do
     source = TestDbModel.create(%{jabba: "dabba"})
-    model = TestDbModel.replace(%{_id: source.doc._id},  %{foo: "bar"})
+    model = TestDbModel.replace(source,  %{foo: "bar"})
     assert model.doc._data == %{foo: "bar"}
   end
   
   test "update model" do
     source = TestModel.create(%{jabba: "dabba"})
-    model = TestModel.update(%{_id: source.doc._id},  %{foo: "bar"})
+    model = TestModel.update(source,  %{foo: "bar"})
     assert model.doc._data == %{jabba: "dabba", foo: "bar"}
   end
   
   test "update in db" do
     source = TestDbModel.create(%{jabba: "dabba"})
-    model = TestDbModel.update(%{_id: source.doc._id},  %{foo: "bar"})
+    model = TestDbModel.update(source,  %{foo: "bar"})
     assert model.doc._data == %{jabba: "dabba", foo: "bar"}
   end
   
   test "destroy model" do
     source = TestModel.create(%{jabba: "dabba"})
-    result = TestModel.destroy(%{_id: source.doc._id})
+    result = TestModel.destroy(source)
     assert result[:_id] == source.doc._id
   end
   
   test "destroy in db" do
     source = TestDbModel.create(%{jabba: "dabba"})
-    result = TestDbModel.destroy(%{_id: source.doc._id})
+    result = TestDbModel.destroy(source)
     assert result[:_id] == source.doc._id
   end
   
@@ -96,21 +102,17 @@ defmodule DomainDocumentTest do
     %Xarango.Database{name: "test_db"}
   end
   
-  defp _collection do
-    %Xarango.Collection{name: "test_collection"}
-  end
+  # defp _collection do
+  #   %Xarango.Collection{name: "test_model"}
+  # end
 
   
 end
 
 defmodule TestModel do
   use Xarango.Domain.Document
-  
-  collection :test_collection
 end
 
 defmodule TestDbModel do
-  use Xarango.Domain.Document
-
-  collection :test_collection, :test_db
+  use Xarango.Domain.Document, db: :test_db
 end
