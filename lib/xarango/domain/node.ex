@@ -13,7 +13,7 @@ defmodule Xarango.Domain.Node do
       defp _graph(nil) do
         case unquote(gr) do
           nil -> raise Xarango.Error, message: "graph not set for #{__MODULE__}"
-          graph -> %Xarango.Graph{name: Atom.to_string(graph)}
+          graph -> %Xarango.Graph{name: Xarango.Util.name_from(graph)}
         end
       end
       defp _graph(name), do: %Xarango.Graph{name: Atom.to_string(name)}

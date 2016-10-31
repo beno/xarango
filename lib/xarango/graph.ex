@@ -121,9 +121,6 @@ defmodule Xarango.Graph do
 end
 
 defmodule Xarango.VertexCollection do
-  # import Xarango.Client, only: [get: 1  ]
-  # use Xarango.URI, prefix: "document"
-
   
   defstruct [:collection]
   

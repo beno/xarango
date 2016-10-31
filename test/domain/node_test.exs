@@ -117,11 +117,11 @@ defmodule TestNoGraphNode do
 end
 
 defmodule TestNode do
-  use Xarango.Domain.Node, graph: :test_graph
+  use Xarango.Domain.Node, graph: TestGraph
 end
 
 defmodule TestDbNode do
-  use Xarango.Domain.Node, graph: :test_graph, db: :test_database
+  use Xarango.Domain.Node, graph: TestGraph, db: :test_database
 end
 
 
