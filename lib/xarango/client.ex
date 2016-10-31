@@ -53,7 +53,9 @@ defmodule Xarango.Client do
 
   defp do_request(method, url, body) when is_binary(body) do
     case HTTPoison.request(method, url, body, headers) do
-      {:error, error} -> raise Xarango.Error, message: error
+      {:error, %HTTPoison.Error{reason: error}} when is_atom(error)-> raise Xarango.Error, message: Atom.to_string(error)
+      {:error, %HTTPoison.Error{reason: error}} when is_binary(error)-> raise Xarango.Error, message: error
+      {:error, error} when is_binary(error) -> raise Xarango.Error, message: error
       {:ok, response} ->  do_decode(response)
     end
   end
