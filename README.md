@@ -29,13 +29,15 @@ Run tests:
 defmodule Article, do: use Xarango.Domain.Document
 
 lorem = Article.create(%{author: "Author", text: "Lorem"})
-ipsum = Article.create(%{author: "Author", text: "Lorem"})
+ipsum = Article.create(%{author: "Author", text: "Ipsum"})
 
 IO.inspect lorem[:text] #=> "Lorem"
 
+Article.one(%{author: "Author"}) #=> %Article{...}
 Article.list(%{author: "Author"}) #=> [%Article{...}, %Article{...}]
 
 Article.update(ipsum, %{status: "review"})
+Article.replace(lorem, %{author: "Author", text: "FooBar"})
 
 Article.destroy(ipsum)
 
@@ -50,7 +52,7 @@ defmodule Car, do: use Xarango.Domain.Node, graph: :vehicles
 defmodule Vehicles do
   use Xarango.Domain.Graph
   
-  relationship :car, :has_brand, :brand
+  relationship Car, :made_by, Brand
 end
 
 Vehicles.create
@@ -58,18 +60,18 @@ subaru = Brand.create(%{name: "Subaru"}, :vehicles)
 outback = Car.create(%{type: "Outback"})
 impreza = Car.create(%{type: "Impreza"})
 
-IO.inspect subaru[:name] #=> "Subaru"
-IO.inspect outback[:type] #=> "Outback"
+subaru[:name] #=> "Subaru"
+outback[:type] #=> "Outback"
 
-Vehicles.add_has_brand(outback, subaru)
-Vehicles.add_has_brand(impreza, subaru)
+Vehicles.add_made_by(outback, subaru)
+Vehicles.add_made_by(impreza, subaru)
 
-Vehicles.car_has_brand(subaru) #=> [%Car{...}, %Car{...}] #outbound edges for car
-Vehicles.has_brand_brand(outback) #=> [%Brand{...}] #inbound edges for brand
+Vehicles.car_made_by(subaru) #=> [%Car{...}, %Car{...}] #outbound edges for car
+Vehicles.made_by_brand(outback) #=> [%Brand{...}] #inbound edges for car
 
-Vehicles.remove_has_brand(impreza, subaru)
+Vehicles.remove_made_by(impreza, subaru)
 
-Vehicles.car_has_brand(subaru) #=> [%Car{...}]
+Vehicles.car_made_by(subaru) #=> [%Car{...}]
 
 
 ```
@@ -84,7 +86,7 @@ The package can be installed as:
 
     ```elixir
     def deps do
-      [{:xarango, "~> 0.2.1"}]
+      [{:xarango, "~> 0.3.0"}]
     end
     ```
 
