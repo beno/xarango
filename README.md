@@ -45,8 +45,8 @@ Article.destroy(ipsum)
 ## Example Graph
 
 ```elixir
-defmodule Brand, do: use Xarango.Domain.Vertex
-defmodule Car, do: use Xarango.Domain.Vertex, graph: :vehicles
+defmodule Brand, do: use Xarango.Domain.Node
+defmodule Car, do: use Xarango.Domain.Node, graph: :vehicles
 defmodule Vehicles do
   use Xarango.Domain.Graph
   

@@ -1,4 +1,4 @@
-defmodule Xarango.Domain.Vertex do
+defmodule Xarango.Domain.Node do
 
   alias Xarango.Vertex
   alias Xarango.SimpleQuery
