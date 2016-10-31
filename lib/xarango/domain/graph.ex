@@ -23,15 +23,15 @@ defmodule Xarango.Domain.Graph do
       defoverridable [_relationships: 0]
       @vertex_root nil
       defp _vertex_root, do: @vertex_root
-      def create do
+      def create, do: ensure
+      def ensure do
         Database.ensure(_database)
         Graph.ensure(_graph, _database)
-        _relationships
-        |> Enum.each(&add_relationship(&1, _graph, _database))
+        Enum.each(_relationships, &ensure_relationship_collections(&1, _graph, _database))
         struct(__MODULE__, graph: Graph.graph(_graph, _database))
       end
-      def destroy(graph) do
-        Graph.destroy(graph.graph, _database)
+      def destroy do
+        Graph.destroy(_graph.graph, _database)
       end
         
     end
@@ -87,7 +87,7 @@ defmodule Xarango.Domain.Graph do
     end
   end
   
-  def add_relationship(rel, graph, database) do
+  def ensure_relationship_collections(rel, graph, database) do
     {collection, from, to} = {rel[:name], rel[:from] |> Xarango.Util.name_from, rel[:to] |> Xarango.Util.name_from}
     %VertexCollection{collection: from} |> VertexCollection.ensure(graph, database)
     %VertexCollection{collection: to} |> VertexCollection.ensure(graph, database)

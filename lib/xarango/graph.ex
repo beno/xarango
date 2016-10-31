@@ -78,7 +78,6 @@ defmodule Xarango.Graph do
     |> to_graph
   end
   
-  
   def ensure(graph, database\\nil) do
     try do
       graph(graph, database)

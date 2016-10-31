@@ -48,15 +48,14 @@ Article.destroy(ipsum)
 
 ```elixir
 defmodule Brand, do: use Xarango.Domain.Node
-defmodule Car, do: use Xarango.Domain.Node, graph: :vehicles
+defmodule Car, do: use Xarango.Domain.Node, graph: Vehicles
 defmodule Vehicles do
   use Xarango.Domain.Graph
   
   relationship Car, :made_by, Brand
 end
 
-Vehicles.create
-subaru = Brand.create(%{name: "Subaru"}, :vehicles)
+subaru = Brand.create(%{name: "Subaru"}, Vehicles)
 outback = Car.create(%{type: "Outback"})
 impreza = Car.create(%{type: "Impreza"})
 

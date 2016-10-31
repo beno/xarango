@@ -20,7 +20,6 @@ defmodule DomainGraphTest do
   end
   
   test "add relationships" do
-    TestGraph.create
     p1 = Person.create(%{name: "Alice"})
     p2 = Person.create(%{name: "Bob"})
     outback = Car.create(%{type: "Outback"})
@@ -34,7 +33,6 @@ defmodule DomainGraphTest do
   end
   
   test "list relationships" do
-    TestGraph.create
     alice = Person.create(%{name: "Alice"})
     bob = Person.create(%{name: "Bob"})
     jim = Person.create(%{name: "Jim"})
@@ -48,7 +46,6 @@ defmodule DomainGraphTest do
   end
   
   test "list db relationships" do
-    TestDbGraph.create
     alice = DbPerson.create(%{name: "Alice"})
     bob = DbPerson.create(%{name: "Bob"})
     jim = DbPerson.create(%{name: "Jim"})
@@ -62,7 +59,6 @@ defmodule DomainGraphTest do
   end
   
   test "remove relationships" do
-    TestGraph.create
     alice = Person.create(%{name: "Alice"})
     bob = Person.create(%{name: "Bob"})
     TestGraph.add_likes(alice, bob)
@@ -74,7 +70,6 @@ defmodule DomainGraphTest do
   end
 
   test "remove db relationships" do
-    TestDbGraph.create
     alice = DbPerson.create(%{name: "Alice"})
     bob = DbPerson.create(%{name: "Bob"})
     TestDbGraph.add_likes(alice, bob)
@@ -92,7 +87,6 @@ defmodule DomainGraphTest do
   end
   
   test "add db relationships" do
-    TestDbGraph.create
     outback = DbCar.create(%{type: "Outback"})
     impreza = DbCar.create(%{type: "Impreza"})
     subaru = DbBrand.create(%{name: "Subaru"})

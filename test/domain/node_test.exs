@@ -17,12 +17,12 @@ defmodule DomainNodeTest do
   end
 
   test "create node in graph" do
-    node = TestNode.create(%{jabba: "dabba"}, :test2_db)
+    node = TestNode.create(%{jabba: "dabba"}, NodeTestGraph2)
     assert node.vertex._data == %{jabba: "dabba"}
   end
   
   test "create no graph node in graph" do
-    node = TestNoGraphNode.create(%{jabba: "dabba"}, :test2_db)
+    node = TestNoGraphNode.create(%{jabba: "dabba"}, NodeTestGraph2)
     assert node.vertex._data == %{jabba: "dabba"}
   end
 
@@ -112,16 +112,25 @@ defmodule DomainNodeTest do
   
 end
 
+defmodule NodeTestGraph do
+  use Xarango.Domain.Graph
+end
+
+defmodule NodeTestGraph2 do
+  use Xarango.Domain.Graph
+end
+
+
 defmodule TestNoGraphNode do
   use Xarango.Domain.Node
 end
 
 defmodule TestNode do
-  use Xarango.Domain.Node, graph: TestGraph
+  use Xarango.Domain.Node, graph: NodeTestGraph
 end
 
 defmodule TestDbNode do
-  use Xarango.Domain.Node, graph: TestGraph, db: :test_database
+  use Xarango.Domain.Node, graph: NodeTestGraph, db: :test_database
 end
 
 

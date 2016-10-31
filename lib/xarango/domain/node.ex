@@ -5,23 +5,24 @@ defmodule Xarango.Domain.Node do
   
   
   defmacro __using__(options) do
-    db = options[:db] && Atom.to_string(options[:db]) || Xarango.Server.server.database
-    gr = options[:graph]
+    database = options[:db] && Atom.to_string(options[:db]) || Xarango.Server.server.database
+    graph = options[:graph]
     quote do
       defstruct vertex: %Xarango.Vertex{}
-      defp _database, do: %Xarango.Database{name: unquote(db)}
-      defp _graph(nil) do
-        case unquote(gr) do
+      defp _database, do: %Xarango.Database{name: unquote(database)}
+      defp _graph_module do
+        case unquote(graph) do
           nil -> raise Xarango.Error, message: "graph not set for #{__MODULE__}"
-          graph -> %Xarango.Graph{name: Xarango.Util.name_from(graph)}
+          graph -> graph
         end
       end
-      defp _graph(name), do: %Xarango.Graph{name: Atom.to_string(name)}
+      defp _graph(nil), do: %Xarango.Graph{name: Xarango.Util.name_from(_graph_module)}
+      defp _graph(graph), do: %Xarango.Graph{name: Xarango.Util.name_from(graph)}
       defp _collection do
         %Xarango.VertexCollection{collection: Xarango.Util.name_from(__MODULE__)}
       end
       def create(data, graph\\nil) do
-        Xarango.Database.ensure(_database)
+        (graph || _graph_module).ensure()
         vc = Xarango.VertexCollection.ensure(_collection, _graph(graph), _database)
         vertex = Vertex.create(%Vertex{_data: data}, vc, _graph(graph), _database) |> Vertex.vertex(vc, _graph(graph), _database)
         struct(__MODULE__, vertex: vertex)
