@@ -70,11 +70,11 @@ defmodule Xarango.Client do
     end
   end
   
-  defp do_encode(body) when is_map(body) do
+  def do_encode(body) when is_map(body) do
     encode_map(body)
   end
   
-  defp do_encode(body) do
+  def do_encode(body) do
     body
   end
   
@@ -94,7 +94,7 @@ defmodule Xarango.Client do
       %{:__struct__ => _} = body -> Map.from_struct(body)
       body -> body
     end
-    |> Enum.reject(fn {_,v} -> v == nil end)
+    |> Enum.reject(&match?({_,nil}, &1))
     |> Enum.map(fn {key, value} -> {key, compact(value)} end)
     |> Enum.into(%{})
   end
