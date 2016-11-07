@@ -21,19 +21,17 @@ defmodule Xarango.Domain.Graph do
       defp _graph, do: %Graph{name: unquote(gr) || Xarango.Util.name_from(__MODULE__) }
       defp _relationships, do: []
       defoverridable [_relationships: 0]
-      @vertex_root nil
-      defp _vertex_root, do: @vertex_root
       def create, do: ensure
       def ensure do
         Database.ensure(_database)
         Graph.ensure(_graph, _database)
-        Enum.each(_relationships, &ensure_relationship_collections(&1, _graph, _database))
+        Enum.each(_relationships, &ensure_collections(&1, _graph, _database))
         struct(__MODULE__, graph: Graph.graph(_graph, _database))
       end
-      def destroy do
-        Graph.destroy(_graph.graph, _database)
-      end
-        
+      def destroy, do: Graph.destroy(_graph.graph, _database)
+      def add(from_node, relationship, to_node, data\\nil), do: add(from_node, relationship, to_node, data, _graph, _database)
+      def remove(from, relationship, to), do: remove(from, relationship, to, _graph, _database)
+      def get(from, relationship, to), do: get(from, relationship, to, _graph, _database)
     end
   end
   
@@ -47,53 +45,63 @@ defmodule Xarango.Domain.Graph do
       @relationships %{from: unquote(from), to: unquote(to), name: unquote(relationship)}
       defp _relationships, do: @relationships
       defoverridable [_relationships: 0]
-
-      def unquote(add_method)(%unquote(from){} = from_node, %to{} = to_node, data\\nil) do
-        from_vc = %Xarango.VertexCollection{collection: Xarango.Util.name_from(unquote(from)) }
-        from_vertex = Vertex.ensure(from_node.vertex, from_vc, _graph, _database)
-        to_vc = %Xarango.VertexCollection{collection: Xarango.Util.name_from(unquote(to)) }
-        to_vertex = Vertex.ensure(to_node.vertex, to_vc, _graph, _database)
-        edge = %Edge{_from: from_vertex._id, _to: to_vertex._id, _data: data}
-        edge_collection = %EdgeCollection{collection: unquote(relationship) }
-        Edge.create(edge, edge_collection, _graph, _database)
-      end
-      def unquote(remove_method)(%unquote(from){} = from_node, %unquote(to){} = to_node) do
-        example = %{_from: from_node.vertex._id, _to: to_node.vertex._id}
-        edge_collection = %EdgeCollection{collection: unquote(relationship) }
-        %SimpleQuery{example: example, collection: edge_collection.collection}
-        |> SimpleQuery.by_example(_database)
-        |> Enum.map(&Edge.destroy(&1, edge_collection, _graph, _database))        
-      end
-      def unquote(outbound_method)(%unquote(from){} = from_node) do
-        edge_collection = %EdgeCollection{collection: unquote(relationship) }
-        Vertex.edges(from_node.vertex, edge_collection, _database, direction: "out")
-        |> Enum.map(fn edge -> 
-          to_vc = %Xarango.VertexCollection{collection: Xarango.Util.name_from(unquote(to)) }
-          key = String.replace(edge._to,~r{[^\/]*/(.*)}, "\\1")
-          vertex = Vertex.vertex(%Vertex{_key: key}, to_vc, _graph, _database)
-          struct(unquote(to), %{vertex: vertex})
-        end)
-      end
-      def unquote(inbound_method)(%to{} = to_node) do
-        edge_collection = %EdgeCollection{collection: unquote(relationship) }
-        Vertex.edges(to_node.vertex, edge_collection, _database, direction: "in")
-        |> Enum.map(fn edge -> 
-          from_vc = %Xarango.VertexCollection{collection: Xarango.Util.name_from(unquote(from))}
-          key = String.replace(edge._from,~r{[^\/]*/(.*)}, "\\1")
-          vertex = Vertex.vertex(%Vertex{_key: key}, from_vc, _graph, _database)
-          struct(unquote(from), %{vertex: vertex})
-        end)
-      end
+      def unquote(add_method)(%unquote(from){} = from, %unquote(to){} = to, data\\nil), do: add(from, unquote(relationship), to, data)
+      def unquote(remove_method)(%unquote(from){} = from, %unquote(to){} = to), do: remove(from, unquote(relationship), to)
+      def unquote(outbound_method)(%unquote(from){} = from), do: get(from, unquote(relationship), unquote(to))
+      def unquote(inbound_method)(%unquote(to){} = to), do: get(unquote(from), unquote(relationship), to)
     end
   end
   
-  def ensure_relationship_collections(rel, graph, database) do
+  def add(from_node, relationship, to_node, data, graph, database) when is_atom(relationship) do
+    add(from_node, Atom.to_string(relationship), to_node, data, graph, database)
+  end
+  def add(from_node, relationship, to_node, data, graph, database) when is_binary(relationship) do
+    from_vc = %VertexCollection{collection: Xarango.Util.name_from(from_node.__struct__) }
+    from_vertex = Vertex.ensure(from_node.vertex, from_vc, graph, database)
+    to_vc = %VertexCollection{collection: Xarango.Util.name_from(to_node.__struct__) }
+    to_vertex = Vertex.ensure(to_node.vertex, to_vc, graph, database)
+    edge = %Edge{_from: from_vertex._id, _to: to_vertex._id, _data: data}
+    edge_collection = %EdgeCollection{collection: relationship }
+    Edge.create(edge, edge_collection, graph, database)
+  end
+  
+  def remove(from_node, relationship, to_node, graph, database) when is_atom(relationship) do
+    remove(from_node, Atom.to_string(relationship), to_node, graph, database)
+  end
+  def remove(from_node, relationship, to_node, graph, database) when is_binary(relationship) do
+    example = %{_from: from_node.vertex._id, _to: to_node.vertex._id}
+    edge_collection = %EdgeCollection{collection: relationship }
+    %SimpleQuery{example: example, collection: edge_collection.collection}
+    |> SimpleQuery.by_example(database)
+    |> Enum.map(&Edge.destroy(&1, edge_collection, graph, database))
+  end
+  
+  def get(from, relationship, to, graph, database) when is_atom(relationship) do
+    get(from, Atom.to_string(relationship), to, graph, database)
+  end
+  def get(%{} = from_node, relationship, to, graph, database) when is_binary(relationship) do
+    edge_collection = %EdgeCollection{collection: relationship }
+    Vertex.edges(from_node.vertex, edge_collection, database, direction: "out")
+    |> Enum.map(fn edge -> 
+      vertex = Vertex.vertex(%Vertex{_id: edge._to}, database)
+      struct(to, %{vertex: vertex})
+    end)
+  end
+  def get(from, relationship, %{} = to_node, graph, database) when is_binary(relationship) do
+    edge_collection = %EdgeCollection{collection: relationship }
+    Vertex.edges(to_node.vertex, edge_collection, database, direction: "in")
+    |> Enum.map(fn edge -> 
+      vertex = Vertex.vertex(%Vertex{_id: edge._from}, database)
+      struct(from, %{vertex: vertex})
+    end)
+  end
+      
+  def ensure_collections(rel, graph, database) do
     {collection, from, to} = {rel[:name], rel[:from] |> Xarango.Util.name_from, rel[:to] |> Xarango.Util.name_from}
     %VertexCollection{collection: from} |> VertexCollection.ensure(graph, database)
     %VertexCollection{collection: to} |> VertexCollection.ensure(graph, database)
     %EdgeDefinition{collection: collection , from: [from], to: [to]} |> EdgeDefinition.ensure(graph, database)
   end
 
-  
 end
 
