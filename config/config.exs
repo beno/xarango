@@ -4,7 +4,7 @@ use Mix.Config
 
 config :xarango, db: [
   server: "http://localhost:8529",
-  database: "_system",
+  database: "xarango_#{Mix.env}",
   version: 30000,
   username: System.get_env("ARANGO_USER"),
   password: System.get_env("ARANGO_PASSWORD")
