@@ -17,10 +17,12 @@ defmodule Xarango.URI do
   
   def path(path, database\\nil) do
     case database do
-      nil -> "/_api/#{path}"
+      nil -> path(path, Xarango.Database.default)
       %{name: db_name} when db_name != "_system" -> "/_db/#{db_name}/_api/#{path}"
       %{name: db_name} when db_name == "_system" -> "/_api/#{path}"
       _ -> raise Xarango.Error, message: "invalid database for path"
     end
   end
+  
+    
 end
