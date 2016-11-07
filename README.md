@@ -1,6 +1,9 @@
 # Xarango
 
-Elixir client library for ArangoDB.
+Elixir client library for [ArangoDB](https://www.arangodb.com).
+
+Xarango has a low level API that maps directly to the Arango REST API.
+
 
 ## Usage
 
@@ -23,7 +26,7 @@ Run tests:
 
     mix test # <= beware: running tests will destroy all data in the configured database.
     
-## Example Document
+## Documents
 
 ```elixir
 defmodule Article, do: use Xarango.Domain.Document
@@ -37,14 +40,14 @@ Article.one(%{author: "Author"}) #=> %Article{...}
 Article.list(%{author: "Author"}) #=> [%Article{...}, %Article{...}]
 
 Article.update(ipsum, %{status: "review"})
-Article.replace(lorem, %{author: "Author", text: "FooBar"})
+Article.replace(lorem, %{author: "Author", text: "Foo"})
 
 Article.destroy(ipsum)
 
 ```
 
 
-## Example Graph
+## Graphs
 
 ```elixir
 defmodule Brand, do: use Xarango.Domain.Node
@@ -75,7 +78,38 @@ Vehicles.car_made_by(subaru) #=> [%Car{...}]
 
 ```
 
+## Transactions
+
+```
+defmodule Brand, do: use Xarango.Domain.Node
+defmodule Car, do: use Xarango.Domain.Node, graph: Vehicles
+defmodule Vehicles do
+  use Xarango.Domain.Graph
+
+  relationship Car, :made_by, Brand
+end
+
+alias Xarango.Transaction
+
+Transaction.begin(Vehicles)
+|> Transaction.create(Car, %{name: "Foo"}, var: :car1)
+|> Transaction.create(Car, %{name: "Bar"}, var: :car2)
+|> Transaction.create(Brand, %{name: "Baz"}, var: :brand)
+|> Transaction.add(:car1, :made_by, :brand)
+|> Transaction.add(:car2, :made_by, :brand)
+|> Transaction.get(Car, :made_by, :brand)
+|> Transaction.execute #=> [%Car{vertex: ...}, %Car{vertex: ...}]
+```
+
+## Low level API
+
 See tests for low level usage examples.
+
+## Todo
+
+- [x] Transactions
+- [ ] Graph operations
+- [ ] Sync/Async
 
 ## Installation
 
@@ -85,7 +119,7 @@ The package can be installed as:
 
     ```elixir
     def deps do
-      [{:xarango, "~> 0.3.0"}]
+      [{:xarango, "~> 0.3.1"}]
     end
     ```
 
