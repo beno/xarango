@@ -6,6 +6,12 @@ defmodule Xarango.Vertex do
   import Xarango.Client
   use Xarango.URI, prefix: "gharial"
   
+  def vertex(%Vertex{_id: id}, database\\nil) when is_binary(id) do
+    Xarango.Document.url(id, database)
+    |> get
+    |> to_vertex
+  end 
+
   def vertex(vertex, collection, graph, database\\nil) do
     url("#{graph.name}/vertex/#{collection.collection}/#{vertex._key}", database)
     |> get

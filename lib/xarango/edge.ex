@@ -6,6 +6,13 @@ defmodule Xarango.Edge do
   import Xarango.Client
   use Xarango.URI, prefix: "gharial"
   
+  
+  def edge(%Edge{_id: id}, database\\nil) when is_binary(id) do
+    Xarango.Document.url(id, database)
+    |> get
+    |> to_edge
+  end 
+
   def edge(edge, collection, graph, database\\nil) do
     url("#{graph.name}/edge/#{collection.collection}/#{edge._key}", database)
     |> get
