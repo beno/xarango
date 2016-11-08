@@ -81,7 +81,7 @@ Vehicles.remove(outback, :made_by, subaru)
 
 ## Transactions
 
-```
+```elixir
 defmodule Brand, do: use Xarango.Domain.Node, graph: Vehicles
 defmodule Car, do: use Xarango.Domain.Node, graph: Vehicles
 defmodule Vehicles do
