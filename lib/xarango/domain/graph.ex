@@ -17,7 +17,7 @@ defmodule Xarango.Domain.Graph do
       import Xarango.Domain.Graph
       defstruct graph: %Xarango.Graph{}
       Module.register_attribute __MODULE__, :relationships, accumulate: true
-      defp _database, do: %Database{name: unquote(db)}
+      def _database, do: %Database{name: unquote(db)}
       defp _graph, do: %Graph{name: unquote(gr) || Xarango.Util.name_from(__MODULE__) }
       defp _relationships, do: []
       defoverridable [_relationships: 0]
@@ -29,9 +29,9 @@ defmodule Xarango.Domain.Graph do
         struct(__MODULE__, graph: Graph.graph(_graph, _database))
       end
       def destroy, do: Graph.destroy(_graph.graph, _database)
-      def add(from_node, relationship, to_node, data\\nil), do: add(from_node, relationship, to_node, data, _graph, _database)
+      def add(from, relationship, to, data\\nil), do: add(from, relationship, to, data, _graph, _database)
       def remove(from, relationship, to), do: remove(from, relationship, to, _graph, _database)
-      def get(from, relationship, to), do: get(from, relationship, to, _graph, _database)
+      def get(from, relationship, to), do: get(from, relationship, to, _database)
     end
   end
   
@@ -45,7 +45,7 @@ defmodule Xarango.Domain.Graph do
       @relationships %{from: unquote(from), to: unquote(to), name: unquote(relationship)}
       defp _relationships, do: @relationships
       defoverridable [_relationships: 0]
-      def unquote(add_method)(%unquote(from){} = from, %unquote(to){} = to, data\\nil), do: add(from, unquote(relationship), to, data)
+      def unquote(add_method)(%unquote(from){} = from, %unquote(to){} = to, data\\nil), do:  add(from, unquote(relationship), to, data)
       def unquote(remove_method)(%unquote(from){} = from, %unquote(to){} = to), do: remove(from, unquote(relationship), to)
       def unquote(outbound_method)(%unquote(from){} = from), do: get(from, unquote(relationship), unquote(to))
       def unquote(inbound_method)(%unquote(to){} = to), do: get(unquote(from), unquote(relationship), to)
@@ -76,10 +76,10 @@ defmodule Xarango.Domain.Graph do
     |> Enum.map(&Edge.destroy(&1, edge_collection, graph, database))
   end
   
-  def get(from, relationship, to, graph, database) when is_atom(relationship) do
-    get(from, Atom.to_string(relationship), to, graph, database)
+  def get(from, relationship, to, database) when is_atom(relationship) do
+    get(from, Atom.to_string(relationship), to, database)
   end
-  def get(%{} = from_node, relationship, to, graph, database) when is_binary(relationship) do
+  def get(%{} = from_node, relationship, to, database) when is_binary(relationship) do
     edge_collection = %EdgeCollection{collection: relationship }
     Vertex.edges(from_node.vertex, edge_collection, database, direction: "out")
     |> Enum.map(fn edge -> 
@@ -87,7 +87,7 @@ defmodule Xarango.Domain.Graph do
       struct(to, %{vertex: vertex})
     end)
   end
-  def get(from, relationship, %{} = to_node, graph, database) when is_binary(relationship) do
+  def get(from, relationship, %{} = to_node, database) when is_binary(relationship) do
     edge_collection = %EdgeCollection{collection: relationship }
     Vertex.edges(to_node.vertex, edge_collection, database, direction: "in")
     |> Enum.map(fn edge -> 
