@@ -58,7 +58,7 @@ defmodule Vehicles do
   relationship Car, :made_by, Brand
 end
 
-subaru = Brand.create(%{name: "Subaru"}, Vehicles)
+subaru = Brand.create(%{name: "Subaru"}, graph: Vehicles)
 outback = Car.create(%{type: "Outback"})
 impreza = Car.create(%{type: "Impreza"})
 
@@ -81,7 +81,7 @@ Vehicles.car_made_by(subaru) #=> [%Car{...}]
 ## Transactions
 
 ```
-defmodule Brand, do: use Xarango.Domain.Node
+defmodule Brand, do: use Xarango.Domain.Node, graph: Vehicles
 defmodule Car, do: use Xarango.Domain.Node, graph: Vehicles
 defmodule Vehicles do
   use Xarango.Domain.Graph
