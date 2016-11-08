@@ -54,6 +54,7 @@ defmodule Xarango.Domain.Node do
   end
   
   def create(data, collection, graph, database) do
+    Xarango.Database.ensure(database)
     Xarango.Graph.ensure(graph)
     vc = Xarango.VertexCollection.ensure(collection, graph, database)
     Vertex.create(%Vertex{_data: data}, vc, graph, database)
