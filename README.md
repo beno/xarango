@@ -2,7 +2,7 @@
 
 Elixir client library for [ArangoDB](https://www.arangodb.com).
 
-Xarango has a low level API that maps directly to the Arango REST API.
+Xarango has a low level API that maps directly to the Arango REST API. On top of that sits a `Domain` API, intended for use in applications. Examples below.
 
 
 ## Usage
