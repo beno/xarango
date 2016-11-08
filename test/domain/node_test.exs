@@ -17,12 +17,12 @@ defmodule DomainNodeTest do
   end
 
   test "create node in graph" do
-    node = TestNode.create(%{jabba: "dabba"}, NodeTestGraph2)
+    node = TestNode.create(%{jabba: "dabba"}, graph: NodeTestGraph2)
     assert node.vertex._data == %{jabba: "dabba"}
   end
   
   test "create no graph node in graph" do
-    node = TestNoGraphNode.create(%{jabba: "dabba"}, NodeTestGraph2)
+    node = TestNoGraphNode.create(%{jabba: "dabba"}, graph: NodeTestGraph2)
     assert node.vertex._data == %{jabba: "dabba"}
   end
 

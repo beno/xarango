@@ -22,7 +22,7 @@ defmodule GraphTest do
     graph = Graph.create(source)
     assert graph.name == source.name
   end
-  
+    
   test "read graph" do
     graph = Graph.create(graph_)
     result = Graph.graph(graph)

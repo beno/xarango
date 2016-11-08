@@ -1,25 +1,30 @@
 defmodule DomainGraphTest do
   use ExUnit.Case
   doctest Xarango
-
-  # alias Xarango.Domain.Graph
   
   setup do
     on_exit fn ->
-      Xarango.Graph.__destroy_all()
-      try do Xarango.Graph.__destroy_all(_database) rescue _ -> nil end
       Xarango.Collection.__destroy_all()
+      Xarango.Graph.__destroy_all()
       try do Xarango.Collection.__destroy_all(_database) rescue _ -> nil end
+      try do Xarango.Graph.__destroy_all(_database) rescue _ -> nil end
     end
   end
-
+  
   test "create graph" do
     graph = TestGraph.create
     assert length(graph.graph.edgeDefinitions) == 2
     assert length(graph.graph.orphanCollections) == 3
   end
   
+  test "ensure graph collections" do
+      graph = TestGraph.create
+      assert length(graph.graph.edgeDefinitions) == 2
+      assert length(graph.graph.orphanCollections) == 3
+    end
+  
   test "add relationships" do
+    TestGraph.ensure
     p1 = Person.create(%{name: "Alice"})
     p2 = Person.create(%{name: "Bob"})
     outback = Car.create(%{type: "Outback"})
@@ -33,6 +38,7 @@ defmodule DomainGraphTest do
   end
   
   test "list relationships" do
+    TestGraph.ensure
     alice = Person.create(%{name: "Alice"})
     bob = Person.create(%{name: "Bob"})
     jim = Person.create(%{name: "Jim"})
@@ -46,6 +52,7 @@ defmodule DomainGraphTest do
   end
   
   test "list db relationships" do
+    TestDbGraph.ensure
     alice = DbPerson.create(%{name: "Alice"})
     bob = DbPerson.create(%{name: "Bob"})
     jim = DbPerson.create(%{name: "Jim"})
@@ -59,6 +66,7 @@ defmodule DomainGraphTest do
   end
   
   test "remove relationships" do
+    TestGraph.ensure
     alice = Person.create(%{name: "Alice"})
     bob = Person.create(%{name: "Bob"})
     TestGraph.add_likes(alice, bob)
@@ -70,6 +78,7 @@ defmodule DomainGraphTest do
   end
 
   test "remove db relationships" do
+    TestDbGraph.ensure
     alice = DbPerson.create(%{name: "Alice"})
     bob = DbPerson.create(%{name: "Bob"})
     TestDbGraph.add_likes(alice, bob)
@@ -87,6 +96,7 @@ defmodule DomainGraphTest do
   end
   
   test "add db relationships" do
+    TestDbGraph.ensure
     outback = DbCar.create(%{type: "Outback"})
     impreza = DbCar.create(%{type: "Impreza"})
     subaru = DbBrand.create(%{name: "Subaru"})
@@ -103,7 +113,7 @@ defmodule DomainGraphTest do
     assert length(graph.graph.edgeDefinitions) == 2
     assert length(graph.graph.orphanCollections) == 3
   end
-  
+    
   defp _database do
     %Xarango.Database{name: "test_db"}
   end
@@ -114,7 +124,7 @@ defmodule Car, do: use Xarango.Domain.Node, graph: TestGraph
 defmodule Brand, do: use Xarango.Domain.Node, graph: TestGraph
 
 defmodule TestGraph do
-  use Xarango.Domain.Graph
+  use Xarango.Domain.Graph, db: :_system
   
   relationship Person, :likes, Person
   relationship Car, :has_brand, Brand
