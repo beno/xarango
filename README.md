@@ -75,6 +75,7 @@ Vehicles.made_by_brand(outback) #=> [%Brand{...}]
 Vehicles.get(outback, :made_by, Brand) #=> [%Brand{...}
 
 Vehicles.remove_made_by(impreza, subaru)
+Vehicles.remove(impreza, :made_by, subaru)
 
 Vehicles.get(Car, :made_by, subaru) #=> [%Car{...}]
 
