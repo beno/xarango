@@ -69,11 +69,14 @@ Vehicles.add_made_by(outback, subaru)
 Vehicles.add_made_by(impreza, subaru)
 
 Vehicles.car_made_by(subaru) #=> [%Car{...}, %Car{...}] #outbound edges for car
-Vehicles.made_by_brand(outback) #=> [%Brand{...}] #inbound edges for car
+Vehicles.get(Car, :made_by, subaru) #=> [%Car{...}, %Car{...}] 
+
+Vehicles.made_by_brand(outback) #=> [%Brand{...}]
+Vehicles.get(outback, :made_by, Brand) #=> [%Brand{...}
 
 Vehicles.remove_made_by(impreza, subaru)
 
-Vehicles.car_made_by(subaru) #=> [%Car{...}]
+Vehicles.get(Car, :made_by, subaru)
 
 
 ```
