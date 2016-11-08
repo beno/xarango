@@ -73,6 +73,10 @@ defmodule Xarango.Transaction do
     merge(transaction, %Transaction{action: action, collections: %{write: [relationship]}})
   end
 
+  def get(transaction, var, type) do
+    action = "{_id: #{var}}"
+    merge(transaction, %Transaction{action: action, return: {type, :_id}})
+  end
   def get(transaction, from, relationship, to) do
     {edge, return_type} = cond do
       is_module(to) -> {%Edge{_from: vertex_id(from)}, {to, :_to}}
@@ -97,16 +101,16 @@ defmodule Xarango.Transaction do
     case var do
       nil -> js
       var ->
-        register_var(var, node_module)
+        # register_var(var, node_module)
         "var #{Atom.to_string(var)} = #{js}._id"
     end
   end
   
-  defp register_var(var, node_module) do
-    vars = Process.get(:vars, %{})
-      |> Map.put(var, node_module)
-    Process.put(:vars, vars)
-  end
+  # defp register_var(var, node_module) do
+  #   vars = Process.get(:vars, %{})
+  #     |> Map.put(var, node_module)
+  #   Process.put(:vars, vars)
+  # end
       
   defp jsify(map) when is_map(map) do
     do_encode(map)
