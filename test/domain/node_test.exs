@@ -107,13 +107,31 @@ defmodule DomainNodeTest do
     model = TestDbNode.create(%{jabba: "dabba"})
     assert model[:jabba] == "dabba"
   end
+  
+  test "load edges" do
+    alice = NodePerson.create(%{_key: "alice", name: "Alice"})
+    bob = NodePerson.create(%{_key: "bob", name: "Bob"})
+    jim = NodePerson.create(%{_key: "jim", name: "Jim"})
+    NodeTestGraph.add(alice, :likes, bob)
+    NodeTestGraph.add(alice, :likes, jim)
+    NodeTestGraph.add(bob, :likes, alice)
+    alice = NodePerson.load(alice, "likes")
+    assert length(alice.out) == 2
+    assert length(alice.in) == 1
+  end
 
   defp _database, do: %Xarango.Database{name: "test_database"}
   
 end
 
+defmodule NodePerson do
+  use Xarango.Domain.Node, graph: NodeTestGraph
+end
+
 defmodule NodeTestGraph do
   use Xarango.Domain.Graph
+  
+  relationship NodePerson, :likes, NodePerson
 end
 
 defmodule NodeTestGraph2 do
@@ -125,12 +143,20 @@ defmodule TestNoGraphNode do
   use Xarango.Domain.Node
 end
 
+defmodule TestNodeDbGraph do
+  use Xarango.Domain.Graph, db: :test_database
+end
+
+
 defmodule TestNode do
   use Xarango.Domain.Node, graph: NodeTestGraph
 end
 
+
+
+
 defmodule TestDbNode do
-  use Xarango.Domain.Node, graph: NodeTestGraph, db: :test_database
+  use Xarango.Domain.Node, graph: TestNodeDbGraph
 end
 
 
