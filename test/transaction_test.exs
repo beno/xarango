@@ -3,6 +3,7 @@ defmodule TransactionTest do
   doctest Xarango
 
   alias Xarango.Transaction
+  alias Xarango.Domain.Node
   
   setup do
     on_exit fn ->
@@ -52,20 +53,7 @@ defmodule TransactionTest do
       |> Transaction.execute
     assert length(result) == 2
   end
-  
-  test "transaction get var" do
-    result = Transaction.begin(TransactionTest.TestGraph)
-      |> Transaction.create(TransactionTest.Car, %{name: "Foo"}, var: :car1)
-      |> Transaction.create(TransactionTest.Car, %{name: "Bar"}, var: :car2)
-      |> Transaction.create(TransactionTest.Brand, %{name: "Baz"}, var: :brand)
-      |> Transaction.add(:car1, :has_brand, :brand)
-      |> Transaction.add(:car2, :has_brand, :brand)
-      |> Transaction.get(:brand, TransactionTest.Brand)
-      |> Transaction.execute
-    assert match?(%{__struct__: TransactionTest.Brand}, result)
-    assert result[:name] == "Baz"
-  end
-  
+    
   defp _database do
     %Xarango.Database{name: "test_db"}
   end

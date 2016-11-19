@@ -55,6 +55,13 @@ defmodule Xarango.Transaction do
     merge(transaction, %Transaction{action: action, collections: %{write: [collection]}})
   end
   
+  def add(transaction, nil), do: transaction
+  def add(transaction, edges) when is_list(edges) do
+    Enum.reduce(edges, transaction, fn {from, relationship, to}, transaction ->
+      transaction
+      |> add(from, relationship, to)
+    end)
+  end
   def add(transaction, from, relationship, to, data\\nil) do
     edge = %Edge{_from: vertex_id(from),  _to: vertex_id(to), _data: data} |> jsify
     action = "db.#{relationship}.save(#{edge})"
@@ -77,7 +84,7 @@ defmodule Xarango.Transaction do
     action = "{_id: #{var}}"
     merge(transaction, %Transaction{action: action, return: {type, :_id}})
   end
-  def get(transaction, from, relationship, to) do
+  def get(transaction, from, relationship, to)  when is_atom(to) do
     {edge, return_type} = cond do
       is_module(to) -> {%Edge{_from: vertex_id(from)}, {to, :_to}}
       is_module(from) -> {%Edge{_to: vertex_id(to)}, {from, :_from}}
@@ -97,23 +104,16 @@ defmodule Xarango.Transaction do
     end
   end
   
-  defp parameterize(var, js, node_module) do
+  defp parameterize(var, js, _node_module) do
     case var do
       nil -> js
       var ->
-        # register_var(var, node_module)
         "var #{Atom.to_string(var)} = #{js}._id"
     end
   end
-  
-  # defp register_var(var, node_module) do
-  #   vars = Process.get(:vars, %{})
-  #     |> Map.put(var, node_module)
-  #   Process.put(:vars, vars)
-  # end
-      
+        
   defp jsify(map) when is_map(map) do
-    do_encode(map)
+    Xarango.Util.do_encode(map)
     |> Enum.reduce([], fn {key, value}, js ->
       js ++ ["#{key}: #{jsify(value)}"]
     end)
@@ -138,12 +138,9 @@ defmodule Xarango.Transaction do
     wrap(js, "function(#{Enum.join(params, ",")}){", "}")
   end
 
-  defp wrap(js, left, right) do
-    case js do
-      "" -> ""
-      js -> left <> js <> right
-    end
-  end
+  defp wrap(nil, _, _), do: ""
+  defp wrap("", _, _), do: ""
+  defp wrap(js, left, right), do: left <> js <> right
 
   defp merge(transaction, addition) do
     Map.from_struct(transaction)
@@ -170,7 +167,10 @@ defmodule Xarango.Transaction do
     data
   end
   defp to_result(data, {return_type, param}, database) do
-    to_result(%{vertex: Vertex.vertex(%Vertex{_id: Map.get(data, param)}, database)}, return_type, database)
+    vertex = Vertex.vertex(%Vertex{_id: Map.get(data, param)}, database)
+    in_edges = Map.get(data, "in")
+    out_edges = Map.get(data, "out")
+    to_result(%{vertex: vertex, in: in_edges, out: out_edges }, return_type, database)
   end
   defp to_result(data, return_type, _database) do
     struct(return_type, data)
