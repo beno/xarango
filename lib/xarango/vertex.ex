@@ -18,7 +18,7 @@ defmodule Xarango.Vertex do
     |> to_vertex
   end 
   
-  def edges(vertex, edge_collection, database\\nil, options\\[]) do
+  def edges(vertex, edge_collection, options\\[], database\\nil) do
     options = Keyword.merge(options, [vertex: vertex._id])
     Xarango.Client._url(Xarango.URI.path("edges/#{edge_collection.collection}", database), options)
     |> get
@@ -56,7 +56,7 @@ defmodule Xarango.Vertex do
       Xarango.Error -> create(vertex, collection, graph, database)
     end
   end
-  
+    
   def to_vertex(data) do
     data = Map.get(data, :vertex, data)
     struct(Vertex, decode_data(data, Vertex))

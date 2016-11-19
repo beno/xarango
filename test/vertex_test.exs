@@ -66,5 +66,5 @@ defmodule VertexTest do
     assert result[:error] == false
     assert result[:removed] == true
   end
-
+  
 end
