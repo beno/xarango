@@ -19,7 +19,22 @@ defmodule TraversalTest do
 
   test "do traversal" do
     {graph, start_vertex} = _create_graph
-    traversal = %Traversal{startVertex: start_vertex._id, graphName: graph.name, direction: "outbound"}
+    traversal = %Traversal{startVertex: start_vertex._id,
+                           graphName: graph.name, 
+                           uniqueness: %{edges: "path", vertices: "path"}, 
+                           direction: "outbound"}
+    result = Traversal.traverse(traversal)
+    assert length(result.paths) == 9
+    assert length(result.vertices) == 9
+  end
+  
+  test "do traversal edge collection" do
+    {graph, start_vertex} = _create_graph
+    ec = Enum.at(graph.edgeDefinitions, 0)
+    traversal = %Traversal{startVertex: start_vertex._id, 
+                           edgeCollection: ec.collection,
+                           uniqueness: %{edges: "global", vertices: "global"}, 
+                           direction: "outbound"}
     result = Traversal.traverse(traversal)
     assert length(result.paths) == 4
     assert length(result.vertices) == 4
@@ -28,10 +43,12 @@ defmodule TraversalTest do
   defp _create_graph do
     vc = vertex_collection_
     ec = edge_collection_
+    ec2 = edge_collection_
     g = Graph.create(graph_)
       |> Graph.add_vertex_collection(vc)
       |> Graph.add_edge_definition(%Xarango.EdgeDefinition{collection: ec.collection, from: [vc.collection], to: [vc.collection]})
-    [alice, bob, charlie, dave, eve] = Enum.map(~w{alice, bob, charlie, dave, eve}, &Vertex.create(person(&1), vc, g))
+      |> Graph.add_edge_definition(%Xarango.EdgeDefinition{collection: ec2.collection, from: [vc.collection], to: [vc.collection]})
+    [alice, bob, charlie, dave, eve, jack] = Enum.map(~w{alice bob charlie dave eve jack}, &Vertex.create(person(&1), vc, g))
     [
       %Edge{_from: alice._id, _to: bob._id},
       %Edge{_from: bob._id, _to: charlie._id},
@@ -41,6 +58,14 @@ defmodule TraversalTest do
     ]
     |> Enum.each(fn e ->
       Edge.create(e, ec, g)
+    end)
+    [
+      %Edge{_from: alice._id, _to: bob._id},
+      %Edge{_from: alice._id, _to: jack._id},
+      %Edge{_from: jack._id, _to: charlie._id},
+    ]
+    |> Enum.each(fn e ->
+      Edge.create(e, ec2, g)
     end)
     {g, alice}
   end

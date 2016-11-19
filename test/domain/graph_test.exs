@@ -13,15 +13,13 @@ defmodule DomainGraphTest do
   
   test "create graph" do
     graph = TestGraph.create
-    assert length(graph.graph.edgeDefinitions) == 2
-    assert length(graph.graph.orphanCollections) == 3
+    assert length(graph.graph.edgeDefinitions) == 3
   end
   
   test "ensure graph collections" do
-      graph = TestGraph.create
-      assert length(graph.graph.edgeDefinitions) == 2
-      assert length(graph.graph.orphanCollections) == 3
-    end
+    graph = TestGraph.create
+    assert length(graph.graph.edgeDefinitions) == 3
+  end
   
   test "add relationships" do
     TestGraph.ensure
@@ -113,6 +111,37 @@ defmodule DomainGraphTest do
     assert length(graph.graph.edgeDefinitions) == 2
     assert length(graph.graph.orphanCollections) == 3
   end
+  
+  test "traverse graph" do
+    TestGraph.ensure
+    alice = Person.create(%{name: "Alice"})
+    bob = Person.create(%{name: "Bob"})
+    jim = Person.create(%{name: "Jim"})
+    TestGraph.add_likes(alice, bob)
+    TestGraph.add_likes(alice, jim)
+    TestGraph.add_likes(bob, alice)
+    TestGraph.traverse(alice)
+  end
+  
+  test "traverse graph filtered" do
+    TestGraph.ensure
+    alice = Person.create(%{name: "Alice"})
+    bob = Person.create(%{name: "Bob"})
+    jim = Person.create(%{name: "Jim"})
+    volvo = Brand.create(%{name: "Volvo"})
+    volvo_truck = Truck.create(%{name: "Volvo Truck"})
+    volvo_1 = Car.create(%{name: "Volvo 1"})
+    volvo_2 = Car.create(%{name: "Volvo 2"})
+    TestGraph.add_has_brand(volvo_1, volvo)
+    TestGraph.add_has_brand(volvo_2, volvo)
+    TestGraph.add_has_brand(volvo_truck, volvo)
+    TestGraph.add_drives(alice, volvo_1)
+    TestGraph.add_drives(bob, volvo_2)
+    TestGraph.add_drives(jim, volvo_truck)
+    result = TestGraph.traverse(volvo)
+    assert length(result.paths) == 1
+    assert length(result.vertices) == 1
+  end
     
   defp _database do
     %Xarango.Database{name: "test_db"}
@@ -121,6 +150,7 @@ end
 
 defmodule Person, do: use Xarango.Domain.Node, graph: TestGraph
 defmodule Car, do: use Xarango.Domain.Node, graph: TestGraph
+defmodule Truck, do: use Xarango.Domain.Node, graph: TestGraph
 defmodule Brand, do: use Xarango.Domain.Node, graph: TestGraph
 
 defmodule TestGraph do
@@ -128,6 +158,9 @@ defmodule TestGraph do
   
   relationship Person, :likes, Person
   relationship Car, :has_brand, Brand
+  relationship Truck, :has_brand, Brand
+  relationship Person, :drives, Car
+  relationship Person, :drives, Truck
 
 end
 

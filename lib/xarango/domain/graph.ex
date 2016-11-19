@@ -8,6 +8,7 @@ defmodule Xarango.Domain.Graph do
   alias Xarango.EdgeDefinition
   alias Xarango.EdgeCollection
   alias Xarango.SimpleQuery
+  alias Xarango.Traversal
   
   defmacro __using__(options\\[]) do
     db = options[:db] && Atom.to_string(options[:db]) || Xarango.Server.server.database
@@ -32,6 +33,7 @@ defmodule Xarango.Domain.Graph do
       def add(from, relationship, to, data\\nil), do: add(from, relationship, to, data, _graph, _database)
       def remove(from, relationship, to), do: remove(from, relationship, to, _graph, _database)
       def get(from, relationship, to), do: get(from, relationship, to, _database)
+      def traverse(start, options\\[]), do: traverse(start, options, _graph, _database)
     end
   end
   
@@ -45,7 +47,8 @@ defmodule Xarango.Domain.Graph do
       @relationships %{from: unquote(from), to: unquote(to), name: unquote(relationship)}
       defp _relationships, do: @relationships
       defoverridable [_relationships: 0]
-      def unquote(add_method)(%unquote(from){} = from, %unquote(to){} = to, data\\nil), do:  add(from, unquote(relationship), to, data)
+      def unquote(add_method)(%unquote(from){} = from, %unquote(to){} = to), do: add(from, unquote(relationship), to, nil)
+      def unquote(add_method)(%unquote(from){} = from, %unquote(to){} = to, data), do:  add(from, unquote(relationship), to, data)
       def unquote(remove_method)(%unquote(from){} = from, %unquote(to){} = to), do: remove(from, unquote(relationship), to)
       def unquote(outbound_method)(%unquote(from){} = from), do: get(from, unquote(relationship), unquote(to))
       def unquote(inbound_method)(%unquote(to){} = to), do: get(unquote(from), unquote(relationship), to)
@@ -81,7 +84,7 @@ defmodule Xarango.Domain.Graph do
   end
   def get(%{} = from_node, relationship, to, database) when is_binary(relationship) do
     edge_collection = %EdgeCollection{collection: relationship }
-    Vertex.edges(from_node.vertex, edge_collection, database, direction: "out")
+    Vertex.edges(from_node.vertex, edge_collection, [direction: "out"], database)
     |> Enum.map(fn edge -> 
       vertex = Vertex.vertex(%Vertex{_id: edge._to}, database)
       struct(to, %{vertex: vertex})
@@ -89,11 +92,22 @@ defmodule Xarango.Domain.Graph do
   end
   def get(from, relationship, %{} = to_node, database) when is_binary(relationship) do
     edge_collection = %EdgeCollection{collection: relationship }
-    Vertex.edges(to_node.vertex, edge_collection, database, direction: "in")
+    Vertex.edges(to_node.vertex, edge_collection, [direction: "in"], database)
     |> Enum.map(fn edge -> 
       vertex = Vertex.vertex(%Vertex{_id: edge._from}, database)
       struct(from, %{vertex: vertex})
     end)
+  end
+  
+  def traverse(start, options, graph, database) do
+    traversal = options
+      |> Enum.into(%{})
+      |> Map.merge(%{startVertex: start.vertex._id})
+      |> Map.merge(%{graphName: graph.name})
+      |> Map.merge(%{direction: "outbound"})
+    struct(Traversal, traversal)  
+    |> Traversal.traverse(database)
+    
   end
       
   def ensure_collections(rel, graph, database) do
