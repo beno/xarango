@@ -129,8 +129,8 @@ defmodule Xarango.VertexCollection do
   end
   
   def ensure(collection, graph, database\\nil) do
-    graph = Xarango.Graph.ensure(graph, database)
-    case Enum.member?(graph.orphanCollections, collection.collection) do
+    collections = Xarango.Graph.vertex_collections(graph, database) |> Enum.map(&Map.get(&1, :collection))
+    case Enum.member?(collections, collection.collection) do
       false ->
         Xarango.Graph.add_vertex_collection(graph, collection, database)
         collection
@@ -158,16 +158,29 @@ defmodule Xarango.EdgeDefinition do
   def ensure(edge_definition, graph, database\\nil) do
     graph = Xarango.Graph.ensure(graph, database)
     Enum.find(graph.edgeDefinitions, fn edge_def ->
-      edge_def.collection == edge_definition.collection && 
-      edge_def.from -- (edge_def.from -- edge_definition.from) != [] && 
-      edge_def.to -- (edge_def.to -- edge_definition.to) != [] 
+      edge_def.collection == edge_definition.collection 
     end)
     |> case do
       nil ->
         Xarango.Graph.add_edge_definition(graph, edge_definition, database)
         edge_definition
-      edge_def -> edge_def
+      edge_def ->
+        if equal?(edge_def, edge_definition) do
+          edge_def
+        else
+          from = edge_def.from ++ edge_definition.from |> Enum.uniq
+          to = edge_def.to ++ edge_definition.to |> Enum.uniq
+          edge_definition = %Xarango.EdgeDefinition{ edge_def | from: from, to: to }
+          Xarango.Graph.replace_edge_definition(graph, edge_definition, database)
+          edge_definition
+        end
     end
+  end
+  
+  defp equal?(ed1, ed2) do
+    ed1.from -- (ed1.from -- ed2.from) != [] &&
+    ed1.to -- (ed1.to -- ed2.to) != [] &&
+    ed1.collection == ed2.collection
   end
 
 end
