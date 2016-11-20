@@ -1,6 +1,6 @@
 defmodule Xarango.Transaction do
 
-  defstruct action: [], params: %{}, collections: %{read: [], write: []}, lockTimeout: 0, waitForSync: false, return: nil
+  defstruct action: [], params: %{}, collections: %{read: [], write: []}, lockTimeout: 0, waitForSync: false, return: nil, graph: nil
 
   import Xarango.Client
   alias Xarango.Transaction
@@ -11,10 +11,16 @@ defmodule Xarango.Transaction do
   def begin(), do: %Transaction{}
   def begin(graph) do
     apply(graph, :ensure, [])
-    %Transaction{}
+    %Transaction{graph: graph}
   end
 
-  def execute(transaction, database\\nil) do
+  def execute(transaction) do
+    case transaction.graph do
+      nil -> execute(transaction, nil)
+      graph -> execute(transaction, apply(graph, :_database, []))
+    end
+  end
+  def execute(transaction, database) do
     return_type = transaction.return
     transaction = finalize(transaction)
     url("", database)
@@ -24,15 +30,22 @@ defmodule Xarango.Transaction do
   end
   
   defp finalize(%{action: action} = transaction) when is_binary(action) do
-    %Transaction{transaction | return: nil}
+    %Transaction{transaction | return: nil, graph: nil}
   end
   defp finalize(%{action: action} = transaction) when is_list(action) do
     [return_action | rest] = Enum.reverse(action)
     action = (["return " <> return_action] ++ rest)
       |> Enum.reverse
       |> Enum.join("; ")
-    action = fnwrap("var db = require('@arangodb').db;" <> action)
-    %Transaction{transaction | action: action, return: nil}
+    action = fnwrap("var db = require('@arangodb').db;" <> graph(transaction.graph) <> action)
+    %Transaction{transaction | action: action, return: nil, graph: nil}
+  end
+  
+  defp graph(graph) do
+    case graph do
+      nil -> ""
+      graph -> ""
+    end
   end
   
   def create(transaction, node_module, data, options\\[]) do
@@ -168,9 +181,7 @@ defmodule Xarango.Transaction do
   end
   defp to_result(data, {return_type, param}, database) do
     vertex = Vertex.vertex(%Vertex{_id: Map.get(data, param)}, database)
-    in_edges = Map.get(data, "in")
-    out_edges = Map.get(data, "out")
-    to_result(%{vertex: vertex, in: in_edges, out: out_edges }, return_type, database)
+    to_result(%{vertex: vertex}, return_type, database)
   end
   defp to_result(data, return_type, _database) do
     struct(return_type, data)

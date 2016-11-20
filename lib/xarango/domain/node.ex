@@ -8,7 +8,7 @@ defmodule Xarango.Domain.Node do
     graph = options[:graph]
     quote do
       alias Xarango.Domain.Node
-      defstruct vertex: %Xarango.Vertex{}, in: [], out: []
+      defstruct vertex: %Xarango.Vertex{}
       defp _graph_module(options) do
         case options[:graph] || unquote(graph) do
           nil -> raise Xarango.Error, message: "graph not set for #{__MODULE__}"
@@ -31,10 +31,6 @@ defmodule Xarango.Domain.Node do
       def replace(node, data, options\\[]), do: Node.replace(node, data, _collection, _graph(options), _database(options)) |> to_node
       def update(node, data, options\\[]), do: Node.update(node, data, _collection, _graph(options), _database(options)) |> to_node
       def destroy(node, options\\[]), do: Node.destroy(node, _collection, _graph(options), _database(options))
-      def load(node, edge_collections, options\\[]) do
-        {in_edges, out_edges} = Node.edges(node, List.wrap(edge_collections), _database(options))
-        %__MODULE__{ node | in: in_edges, out: out_edges }
-      end
       def fetch(node, field) do
         case field do
           :id -> {:ok, node.vertex._id}
@@ -82,18 +78,6 @@ defmodule Xarango.Domain.Node do
     |> Vertex.destroy(collection, graph, database)
   end
   
-  def edges(node, edge_collections, database) do
-    Enum.reduce(edge_collections, {node.in || [], node.out || []}, fn collection, {in_edges, out_edges} ->
-      collection = case collection do
-        coll when is_atom(coll) -> Atom.to_string(coll)
-        coll -> coll
-      end
-      collection = %EdgeCollection{collection: collection}
-      {in_edges ++ Vertex.edges(node.vertex, collection, [direction: "in"], database),
-       out_edges ++ Vertex.edges(node.vertex, collection, [direction: "out"], database)}
-    end)
-  end
-
   defp to_vertex(document) do
     doc = Map.from_struct(document)
     struct(Xarango.Vertex, doc) 

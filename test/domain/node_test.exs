@@ -108,18 +108,6 @@ defmodule DomainNodeTest do
     assert model[:jabba] == "dabba"
   end
   
-  test "load edges" do
-    alice = NodePerson.create(%{_key: "alice", name: "Alice"})
-    bob = NodePerson.create(%{_key: "bob", name: "Bob"})
-    jim = NodePerson.create(%{_key: "jim", name: "Jim"})
-    NodeTestGraph.add(alice, :likes, bob)
-    NodeTestGraph.add(alice, :likes, jim)
-    NodeTestGraph.add(bob, :likes, alice)
-    alice = NodePerson.load(alice, "likes")
-    assert length(alice.out) == 2
-    assert length(alice.in) == 1
-  end
-
   defp _database, do: %Xarango.Database{name: "test_database"}
   
 end
