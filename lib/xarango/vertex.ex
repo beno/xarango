@@ -13,7 +13,12 @@ defmodule Xarango.Vertex do
   end 
 
   def vertex(vertex, collection, graph, database\\nil) do
-    url("#{graph.name}/vertex/#{collection.collection}/#{vertex._key}", database)
+    url = case vertex do
+      %{_id: id} -> id
+      %{_key: key} -> "#{collection.collection}/#{key}"
+      _ -> raise Xarango.Error, message: "Vertex not specified"
+    end
+    url("#{graph.name}/vertex/#{url}", database)
     |> get
     |> to_vertex
   end 
