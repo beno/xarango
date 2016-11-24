@@ -37,17 +37,10 @@ defmodule Xarango.Transaction do
     action = (["return " <> return_action] ++ rest)
       |> Enum.reverse
       |> Enum.join("; ")
-    action = fnwrap("var db = require('@arangodb').db;" <> graph(transaction.graph) <> action)
+    action = fnwrap("var db = require('@arangodb').db;" <> action)
     %Transaction{transaction | action: action, return: nil, graph: nil}
   end
-  
-  defp graph(graph) do
-    case graph do
-      nil -> ""
-      graph -> ""
-    end
-  end
-  
+    
   def create(transaction, node_module, data, options\\[]) do
     collection = Xarango.Util.name_from(node_module)
     action = "db.#{collection}.save(#{jsify(data)})"
