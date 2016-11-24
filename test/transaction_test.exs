@@ -26,9 +26,9 @@ defmodule TransactionTest do
       |> Transaction.create(TransactionTest.Brand, %{name: "Baz"}, var: :brand)
       |> Transaction.add(:car1, :has_brand, :brand)
       |> Transaction.execute
-      |> Xarango.Edge.edge
-    assert String.starts_with?(edge._from, "transaction_test_car/") 
-    assert String.starts_with?(edge._to, "transaction_test_brand/")
+      |> Xarango.Document.document
+    assert String.starts_with?(edge._data[:_from], "transaction_test_car/") 
+    assert String.starts_with?(edge._data[:_to], "transaction_test_brand/")
   end
   
   test "transaction add with data" do
@@ -38,8 +38,8 @@ defmodule TransactionTest do
       |> Transaction.create(TransactionTest.Brand, %{name: "Baz"}, var: :brand)
       |> Transaction.add(:car1, :has_brand, :brand, %{jabba: "dabba"})
       |> Transaction.execute
-      |> Xarango.Edge.edge
-    assert edge._data == %{jabba: "dabba"}
+      |> Xarango.Document.document
+    assert match?(%{jabba: "dabba"}, edge._data)
   end
 
   test "transaction get" do
