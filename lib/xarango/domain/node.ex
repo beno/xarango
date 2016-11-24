@@ -50,10 +50,14 @@ defmodule Xarango.Domain.Node do
   end
   
   def one(params, collection, edges, _graph, database) when is_list(edges) do
-    SimpleQuery.first_example(%SimpleQuery{example: params, collection: collection.collection}, database) |> to_vertex
+    SimpleQuery.by_example(%SimpleQuery{example: params, collection: collection.collection}, database) |> to_vertex
   end
-  def one(params, collection, _graph, database) do
-    SimpleQuery.first_example(%SimpleQuery{example: params, collection: collection.collection}, database) |> to_vertex
+  def one(params, collection, graph, database) do
+    case params do
+      %{id: id} -> Vertex.vertex(%Vertex{_id: id}, collection, graph, database)
+      %{vertex: vertex} -> Vertex.vertex(vertex, collection, graph, database)
+      _ -> SimpleQuery.first_example(%SimpleQuery{example: params, collection: collection.collection}, database) |> to_vertex
+    end
   end
   
   def list(params, collection, _graph, database) do
