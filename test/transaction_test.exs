@@ -53,7 +53,66 @@ defmodule TransactionTest do
       |> Transaction.execute
     assert length(result) == 2
   end
-    
+  
+  test "transaction update" do
+    result = Transaction.begin(TransactionTest.TestGraph)
+      |> Transaction.create(TransactionTest.Car, %{name: "Foo"}, var: :car1)
+      |> Transaction.update(TransactionTest.Car, %{id: :car1, foo: "Bar"})
+      |> Transaction.get(:car1, TransactionTest.Car)
+      |> Transaction.execute
+    assert result[:name] == "Foo"
+    assert result[:foo] == "Bar"
+  end
+  
+  test "transaction update node data" do
+    car = TransactionTest.Car.create(%{name: "Foo"})
+    data = car.vertex._data
+      |> Map.put(:id, car[:id])
+      |> Map.put(:jabba, "Dabba")
+    result = Transaction.begin(TransactionTest.TestGraph)
+      |> Transaction.update(TransactionTest.Car, data)
+      |> Transaction.get(car[:id], TransactionTest.Car)
+      |> Transaction.execute
+    assert result[:name] == "Foo"
+    assert result[:jabba] == "Dabba"
+  end
+
+  test "transaction replace node" do
+    result = Transaction.begin(TransactionTest.TestGraph)
+      |> Transaction.create(TransactionTest.Car, %{name: "Foo"}, var: :car1)
+      |> Transaction.replace(TransactionTest.Car, %{id: :car1, foo: "Baz"})
+      |> Transaction.get(:car1, TransactionTest.Car)
+      |> Transaction.execute
+    assert result[:name] == nil
+    assert result[:foo] == "Baz"
+  end
+
+  test "transaction update edge data" do
+    car = TransactionTest.Car.create(%{name: "Car"})
+    brand = TransactionTest.Brand.create(%{name: "Brand"})
+    edge = TransactionTest.TestGraph.add(car, :has_brand, brand, %{foo: "Bar"})
+    data = %{id: edge._id, jabba: "Dabba"}
+    result = Transaction.begin(TransactionTest.TestGraph)
+      |> Transaction.update(:has_brand, data)
+      |> Transaction.get(edge._id, :has_brand)
+      |> Transaction.execute
+    assert result._data[:foo] == "Bar"
+    assert result._data[:jabba] == "Dabba"
+  end
+
+  test "transaction replace edge" do
+    car = TransactionTest.Car.create(%{name: "Car"})
+    brand = TransactionTest.Brand.create(%{name: "Brand"})
+    edge = TransactionTest.TestGraph.add(car, :has_brand, brand, %{foo: "Bar"})
+    data = %{id: edge._id, _from: car[:id], _to: brand[:id], jabba: "Dabba"} |> IO.inspect
+    result = Transaction.begin(TransactionTest.TestGraph)
+      |> Transaction.replace(:has_brand, data)
+      |> Transaction.get(edge._id, :has_brand)
+      |> Transaction.execute
+    assert result._data[:foo] == nil
+    assert result._data[:jabba] == "Dabba"
+  end
+
   defp _database do
     %Xarango.Database{name: "test_db"}
   end

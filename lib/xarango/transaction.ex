@@ -41,24 +41,35 @@ defmodule Xarango.Transaction do
     %Transaction{transaction | action: action, return: nil, graph: nil}
   end
     
-  def create(transaction, node_module, data, options\\[]) do
-    collection = Xarango.Util.name_from(node_module)
-    action = "db.#{collection}.save(#{jsify(data)})"
-    action = parameterize(options[:var], action, node_module)
-    merge(transaction, %Transaction{action: action, collections: %{write: [collection]}, return: node_module})
+  def create(transaction, collection, data, options\\[]) do
+    action = "db.#{jsify(collection)}.insert(#{jsify(data)})"
+    action = parameterize(options[:var], action, collection)
+    merge(transaction, %Transaction{action: action, collections: %{write: [jsify(collection)]}, return: collection})
   end
   
-  def ensure(transaction, node_module, data, options\\[]) do
-    collection = Xarango.Util.name_from(node_module)
-    action = "(db.#{collection}.firstExample(#{jsify(data)}) || db.#{collection}.save(#{jsify(data)}))"
-    action = parameterize(options[:var], action, node_module)
-    merge(transaction, %Transaction{action: action, collections: %{write: [collection]}, return: node_module})
+  def update(transaction, collection, data, options\\[]) do
+    {id, data} = Map.pop(data, :id)
+    action = "db.#{jsify(collection)}.update(#{jsify(id)}, #{jsify(data)})" 
+    action = parameterize(options[:var], action, collection)
+    merge(transaction, %Transaction{action: action, collections: %{write: [jsify(collection)]}, return: collection})
+  end
+
+  def replace(transaction, collection, data, options\\[]) do
+    {id, data} = Map.pop(data, :id)
+    action = "db.#{jsify(collection)}.replace(#{jsify(id)}, #{jsify(data)})"
+    action = parameterize(options[:var], action, collection)
+    merge(transaction, %Transaction{action: action, collections: %{write: [jsify(collection)]}, return: collection})
+  end
+
+  def ensure(transaction, collection, data, options\\[]) do
+    action = "(db.#{jsify(collection)}.firstExample(#{jsify(data)}) || db.#{collection}.insert(#{jsify(data)}))"
+    action = parameterize(options[:var], action, collection)
+    merge(transaction, %Transaction{action: action, collections: %{write: [jsify(collection)]}, return: collection})
   end
   
-  def destroy(transaction, node_module, node) do
-    collection = Xarango.Util.name_from(node_module)
-    action = "(db.#{collection}.delete(#{jsify(node.vertex)}))"
-    merge(transaction, %Transaction{action: action, collections: %{write: [collection]}})
+  def destroy(transaction, collection, node) do
+    action = "(db.#{jsify(collection)}.delete(#{jsify(node.vertex)}))"
+    merge(transaction, %Transaction{action: action, collections: %{write: [jsify(collection)]}})
   end
   
   def add(transaction, nil), do: transaction
@@ -70,7 +81,7 @@ defmodule Xarango.Transaction do
   end
   def add(transaction, from, relationship, to, data\\nil) do
     edge = %Edge{_from: vertex_id(from),  _to: vertex_id(to), _data: data} |> jsify
-    action = "db.#{relationship}.save(#{edge})"
+    action = "db.#{relationship}.insert(#{edge})"
     merge(transaction, %Transaction{action: action, collections: %{write: [relationship]}, return: Edge})
   end
 
@@ -87,7 +98,7 @@ defmodule Xarango.Transaction do
   end
 
   def get(transaction, var, type) do
-    action = "{_id: #{var}}"
+    action = "{_id: #{jsify(var)}}"
     merge(transaction, %Transaction{action: action, return: {type, :_id}})
   end
   def get(transaction, from, relationship, to)  when is_atom(to) do
@@ -110,7 +121,7 @@ defmodule Xarango.Transaction do
     end
   end
   
-  defp parameterize(var, js, _node_module) do
+  defp parameterize(var, js, _) do
     case var do
       nil -> js
       var ->
@@ -138,6 +149,12 @@ defmodule Xarango.Transaction do
   end
   defp jsify(value) when is_binary(value), do: wrap(value, "\"", "\"")
   defp jsify(nil), do: "null"
+  defp jsify(value) when is_atom(value) do
+    cond do
+      is_module(value) -> Xarango.Util.name_from(value)
+      true -> Atom.to_string(value)
+    end
+  end
   defp jsify(value), do: value
   
   defp fnwrap(js, params\\[]) do
@@ -173,8 +190,14 @@ defmodule Xarango.Transaction do
     data
   end
   defp to_result(data, {return_type, param}, database) do
-    vertex = Vertex.vertex(%Vertex{_id: Map.get(data, param)}, database)
-    to_result(%{vertex: vertex}, return_type, database)
+    cond do
+      is_module(return_type) ->
+        vertex = Vertex.vertex(%Vertex{_id: Map.get(data, param)}, database)
+        to_result(%{vertex: vertex}, return_type, database)
+      is_atom(return_type) ->
+        Edge.edge(%Edge{_id: Map.get(data, param)}, database)
+      true -> raise Xarango.Error, message: "Illegal return type"
+    end
   end
   defp to_result(data, return_type, _database) do
     struct(return_type, data)
