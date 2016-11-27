@@ -104,7 +104,7 @@ defmodule TransactionTest do
     car = TransactionTest.Car.create(%{name: "Car"})
     brand = TransactionTest.Brand.create(%{name: "Brand"})
     edge = TransactionTest.TestGraph.add(car, :has_brand, brand, %{foo: "Bar"})
-    data = %{id: edge._id, _from: car[:id], _to: brand[:id], jabba: "Dabba"} |> IO.inspect
+    data = %{id: edge._id, _from: car[:id], _to: brand[:id], jabba: "Dabba"}
     result = Transaction.begin(TransactionTest.TestGraph)
       |> Transaction.replace(:has_brand, data)
       |> Transaction.get(edge._id, :has_brand)
