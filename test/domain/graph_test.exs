@@ -106,8 +106,15 @@ defmodule DomainGraphTest do
     assert length(subaru_cars) == 2
   end
   
-  test "create vertex root graph" do
-    graph = App.Graph.TestVrootGraph.create
+  test "create collection name" do
+    graph = App.CollGraph.TestCollGraph.create
+    assert Enum.member?(graph.graph.orphanCollections, "all_people")
+    assert Enum.member?(graph.graph.orphanCollections, "all_cars")
+    assert Enum.member?(graph.graph.orphanCollections, "all_brands")
+  end
+  
+  test "create nested module name" do
+    graph = App.Graph.TestModGraph.create
     assert length(graph.graph.edgeDefinitions) == 2
     assert length(graph.graph.orphanCollections) == 3
   end
@@ -164,10 +171,9 @@ defmodule TestGraph do
 
 end
 
-defmodule DbPerson, do: use Xarango.Domain.Node, graph: TestDbGraph, db: :test_db
-defmodule DbCar, do: use Xarango.Domain.Node, graph: TestDbGraph, db: :test_db
-defmodule DbBrand, do: use Xarango.Domain.Node, graph: TestDbGraph, db: :test_db
-
+defmodule DbPerson, do: use Xarango.Domain.Node, graph: TestDbGraph
+defmodule DbCar, do: use Xarango.Domain.Node, graph: TestDbGraph
+defmodule DbBrand, do: use Xarango.Domain.Node, graph: TestDbGraph
 
 defmodule TestDbGraph do
   use Xarango.Domain.Graph, db: :test_db
@@ -177,11 +183,11 @@ defmodule TestDbGraph do
 
 end
 
-defmodule App.Graph.Nodes.Person, do: use Xarango.Domain.Node, graph: App.Graph.TestVrootGraph
-defmodule App.Graph.Nodes.Car, do: use Xarango.Domain.Node, graph: App.Graph.TestVrootGraph
-defmodule App.Graph.Nodes.Brand, do: use Xarango.Domain.Node, graph: App.Graph.TestVrootGraph
+defmodule App.Graph.Nodes.Person, do: use Xarango.Domain.Node, graph: App.Graph.TestModGraph
+defmodule App.Graph.Nodes.Car, do: use Xarango.Domain.Node, graph: App.Graph.TestModGraph
+defmodule App.Graph.Nodes.Brand, do: use Xarango.Domain.Node, graph: App.Graph.TestModGraph
 
-defmodule App.Graph.TestVrootGraph do
+defmodule App.Graph.TestModGraph do
   use Xarango.Domain.Graph, db: :test_db
   
   alias App.Graph.Nodes
@@ -190,5 +196,20 @@ defmodule App.Graph.TestVrootGraph do
   relationship Nodes.Car, :has_brand, Nodes.Brand
 
 end
+
+defmodule App.CollGraph.Nodes.Person, do: use Xarango.Domain.Node, graph: App.CollGraph.TestCollGraph, collection: :all_people
+defmodule App.CollGraph.Nodes.Car, do: use Xarango.Domain.Node, graph: App.CollGraph.TestCollGraph, collection: :all_cars
+defmodule App.CollGraph.Nodes.Brand, do: use Xarango.Domain.Node, graph: App.CollGraph.TestCollGraph, collection: :all_brands
+
+defmodule App.CollGraph.TestCollGraph do
+  use Xarango.Domain.Graph, db: :test_db
+
+  alias App.CollGraph.Nodes
+
+  relationship Nodes.Person, :likes, Nodes.Person
+  relationship Nodes.Car, :has_brand, Nodes.Brand
+
+end
+
 
 

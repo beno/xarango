@@ -51,7 +51,7 @@ Article.destroy(ipsum)
 
 ```elixir
 defmodule Brand, do: use Xarango.Domain.Node
-defmodule Car, do: use Xarango.Domain.Node, graph: Vehicles
+defmodule Car, do: use Xarango.Domain.Node, graph: Vehicles, collection: :all_cars
 defmodule Vehicles do
   use Xarango.Domain.Graph
   
@@ -109,7 +109,7 @@ See tests for low level usage examples.
 ## Todo
 
 - [x] Transactions
-- [ ] Graph operations
+- [x] Graph operations
 - [ ] Sync/Async
 
 ## Installation

@@ -1,11 +1,11 @@
 defmodule Xarango.Domain.Node do
   
   alias Xarango.Vertex
-  alias Xarango.EdgeCollection
   alias Xarango.SimpleQuery
   
   defmacro __using__(options\\[]) do
     graph = options[:graph]
+    collection = options[:collection]
     quote do
       alias Xarango.Domain.Node
       defstruct vertex: %Xarango.Vertex{}
@@ -21,7 +21,14 @@ defmodule Xarango.Domain.Node do
       defp _database(options) do
         apply(_graph_module(options), :_database, [])
       end
-      defp _collection, do: %Xarango.VertexCollection{collection: Xarango.Util.name_from(__MODULE__)}
+      def _collection do
+        collection = case unquote(collection) do
+          nil -> Xarango.Util.name_from(__MODULE__)
+          coll when is_atom(coll) -> Atom.to_string(coll)
+          coll when is_binary(coll) -> coll
+        end
+        %Xarango.VertexCollection{collection: collection}
+      end
       def create(data, options\\[]) do
         apply(_graph_module(options), :ensure, [])
         Node.create(data, _collection, _graph(options), _database(options)) |> to_node

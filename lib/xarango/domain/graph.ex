@@ -9,7 +9,7 @@ defmodule Xarango.Domain.Graph do
   alias Xarango.EdgeCollection
   alias Xarango.SimpleQuery
   alias Xarango.Traversal
-  
+
   defmacro __using__(options\\[]) do
     db = options[:db] && Atom.to_string(options[:db]) || Xarango.Server.server.database
     gr = options[:graph] && Xarango.Util.name_from(options[:graph])
@@ -59,10 +59,8 @@ defmodule Xarango.Domain.Graph do
     add(from_node, Atom.to_string(relationship), to_node, data, graph, database)
   end
   def add(from_node, relationship, to_node, data, graph, database) when is_binary(relationship) do
-    from_vc = %VertexCollection{collection: Xarango.Util.name_from(from_node.__struct__) }
-    from_vertex = Vertex.ensure(from_node.vertex, from_vc, graph, database)
-    to_vc = %VertexCollection{collection: Xarango.Util.name_from(to_node.__struct__) }
-    to_vertex = Vertex.ensure(to_node.vertex, to_vc, graph, database)
+    from_vertex = Vertex.ensure(from_node.vertex, apply(from_node.__struct__, :_collection, []), graph, database)
+    to_vertex = Vertex.ensure(to_node.vertex, apply(to_node.__struct__, :_collection, []), graph, database)
     edge = %Edge{_from: from_vertex._id, _to: to_vertex._id, _data: data}
     edge_collection = %EdgeCollection{collection: relationship }
     Edge.create(edge, edge_collection, graph, database)
@@ -111,10 +109,10 @@ defmodule Xarango.Domain.Graph do
   end
       
   def ensure_collections(rel, graph, database) do
-    {collection, from, to} = {rel[:name], rel[:from] |> Xarango.Util.name_from, rel[:to] |> Xarango.Util.name_from}
-    %VertexCollection{collection: from} |> VertexCollection.ensure(graph, database)
-    %VertexCollection{collection: to} |> VertexCollection.ensure(graph, database)
-    %EdgeDefinition{collection: collection , from: [from], to: [to]} |> EdgeDefinition.ensure(graph, database)
+    {collection, from, to} = {rel[:name], apply(rel[:from], :_collection, []), apply(rel[:to], :_collection, [])}
+    from |> VertexCollection.ensure(graph, database)
+    to |> VertexCollection.ensure(graph, database)
+    %EdgeDefinition{collection: collection , from: [from.collection], to: [to.collection]} |> EdgeDefinition.ensure(graph, database)
   end
 
 end
