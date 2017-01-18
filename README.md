@@ -7,15 +7,15 @@ Xarango has a low level API that maps directly to the Arango REST API. On top of
 
 ## Usage
 
-Configure xarango in `config/confix.exs`:
+Configure xarango in `config/config.exs`:
 
-    config :xarango, db: [
+```elixir
+    config :xarango, :db,
       server: "http://localhost:8529",
       database: "test_db",
-      version: 30000,
       username: System.get_env("ARANGO_USER"),
       password: System.get_env("ARANGO_PASSWORD")
-    ]
+```
 
 Set your credentials:
 
