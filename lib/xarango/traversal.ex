@@ -1,23 +1,23 @@
 defmodule Xarango.Traversal do
-  
-  defstruct [:sort, :direction, :minDepth, :startVertex, :visitor, :itemOrder, 
+
+  defstruct [:sort, :direction, :minDepth, :startVertex, :visitor, :itemOrder,
     :strategy, :filter, :init, :maxIterations, :maxDepth, :uniqueness, :graphName, :expander, :edgeCollection]
-  
+
   import Xarango.Client
   use Xarango.URI, prefix: "traversal"
-  
+
   def traverse(traversal, database\\nil, options\\[]) do
     url("", database, options)
     |> post(traversal)
     |> Xarango.TraversalResult.to_result
-  end  
-  
+  end
+
 end
 
 defmodule Xarango.TraversalResult do
-  
+
   defstruct [:vertices, :paths]
-  
+
   def to_result(data) do
     visited = get_in(data, [:result, :visited])
     result = visited
@@ -29,9 +29,9 @@ defmodule Xarango.TraversalResult do
 end
 
 defmodule Xarango.Path do
-  
+
   defstruct [:vertices, :edges]
-  
+
   def to_path(data) do
     path = data
       |> Map.put(:vertices, Enum.map(data[:vertices], &Xarango.Vertex.to_vertex(&1)))
