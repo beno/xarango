@@ -4,21 +4,21 @@ defmodule TransactionTest do
 
   alias Xarango.Transaction
   alias Xarango.Domain.Node
-  
+
   setup do
     on_exit fn ->
       Xarango.Graph.__destroy_all()
       Xarango.Collection.__destroy_all()
-      try do Xarango.Graph.__destroy_all(_database) rescue _ -> nil end
-      try do Xarango.Collection.__destroy_all(_database) rescue _ -> nil end
+      try do Xarango.Graph.__destroy_all(_database()) rescue _ -> nil end
+      try do Xarango.Collection.__destroy_all(_database()) rescue _ -> nil end
     end
   end
-  
+
   test "execute transaction" do
     result = %Transaction{ collections: %{}, action: "function(){return \"Hello\"}" } |> Transaction.execute
     assert result == "Hello"
   end
-  
+
   test "transaction add" do
     edge = Transaction.begin(TransactionTest.TestGraph)
       |> Transaction.create(TransactionTest.Car, %{name: "Foo"}, var: :car1)
@@ -27,10 +27,10 @@ defmodule TransactionTest do
       |> Transaction.add(:car1, :has_brand, :brand)
       |> Transaction.execute
       |> Xarango.Document.document
-    assert String.starts_with?(edge._data[:_from], "transaction_test_car/") 
+    assert String.starts_with?(edge._data[:_from], "transaction_test_car/")
     assert String.starts_with?(edge._data[:_to], "transaction_test_brand/")
   end
-  
+
   test "transaction add with data" do
     edge = Transaction.begin(TransactionTest.TestGraph)
       |> Transaction.create(TransactionTest.Car, %{name: "Foo"}, var: :car1)
@@ -53,7 +53,7 @@ defmodule TransactionTest do
       |> Transaction.execute
     assert length(result) == 2
   end
-  
+
   test "transaction update" do
     result = Transaction.begin(TransactionTest.TestGraph)
       |> Transaction.create(TransactionTest.Car, %{name: "Foo"}, var: :car1)
@@ -63,7 +63,7 @@ defmodule TransactionTest do
     assert result[:name] == "Foo"
     assert result[:foo] == "Bar"
   end
-  
+
   test "transaction update node data" do
     car = TransactionTest.Car.create(%{name: "Foo"})
     data = car.vertex._data
@@ -116,16 +116,15 @@ defmodule TransactionTest do
   defp _database do
     %Xarango.Database{name: "test_db"}
   end
-  
+
   defmodule Car, do: use Xarango.Domain.Node, graph: TransactionTest.TestGraph
   defmodule Brand, do: use Xarango.Domain.Node, graph: TransactionTest.TestGraph
-  
+
   defmodule TestGraph do
     use Xarango.Domain.Graph
-  
-    relationship Car, :has_brand, Brand
-  
-  end
-  
-end
 
+    relationship Car, :has_brand, Brand
+
+  end
+
+end
