@@ -1,5 +1,5 @@
 defmodule Xarango.Domain.Graph do
-  
+
   alias Xarango.Database
   alias Xarango.Graph
   alias Xarango.Vertex
@@ -22,21 +22,21 @@ defmodule Xarango.Domain.Graph do
       defp _graph, do: %Graph{name: unquote(gr) || Xarango.Util.name_from(__MODULE__) }
       defp _relationships, do: []
       defoverridable [_relationships: 0]
-      def create, do: ensure
+      def create, do: ensure()
       def ensure do
-        Database.ensure(_database)
-        Graph.ensure(_graph, _database)
-        Enum.each(_relationships, &ensure_collections(&1, _graph, _database))
-        struct(__MODULE__, graph: Graph.graph(_graph, _database))
+        Database.ensure(_database())
+        Graph.ensure(_graph(), _database())
+        Enum.each(_relationships(), &ensure_collections(&1, _graph(), _database()))
+        struct(__MODULE__, graph: Graph.graph(_graph(), _database()))
       end
-      def destroy, do: Graph.destroy(_graph.graph, _database)
-      def add(from, relationship, to, data\\nil), do: add(from, relationship, to, data, _graph, _database)
-      def remove(from, relationship, to), do: remove(from, relationship, to, _graph, _database)
-      def get(from, relationship, to), do: get(from, relationship, to, _database)
-      def traverse(start, options\\[]), do: traverse(start, options, _graph, _database)
+      def destroy, do: Graph.destroy(_graph().graph, _database())
+      def add(from, relationship, to, data\\nil), do: add(from, relationship, to, data, _graph(), _database())
+      def remove(from, relationship, to), do: remove(from, relationship, to, _graph(), _database())
+      def get(from, relationship, to), do: get(from, relationship, to, _database())
+      def traverse(start, options\\[]), do: traverse(start, options, _graph(), _database())
     end
   end
-  
+
   defmacro relationship(from, relationship, to) do
     {relationship, from, to} = {Atom.to_string(relationship), Macro.expand(from, __CALLER__), Macro.expand(to, __CALLER__)}
     add_method = "add_#{relationship}" |> String.to_atom
@@ -54,7 +54,7 @@ defmodule Xarango.Domain.Graph do
       def unquote(inbound_method)(%unquote(to){} = to), do: get(unquote(from), unquote(relationship), to)
     end
   end
-  
+
   def add(from_node, relationship, to_node, data, graph, database) when is_atom(relationship) do
     add(from_node, Atom.to_string(relationship), to_node, data, graph, database)
   end
@@ -65,7 +65,7 @@ defmodule Xarango.Domain.Graph do
     edge_collection = %EdgeCollection{collection: relationship }
     Edge.create(edge, edge_collection, graph, database)
   end
-  
+
   def remove(from_node, relationship, to_node, graph, database) when is_atom(relationship) do
     remove(from_node, Atom.to_string(relationship), to_node, graph, database)
   end
@@ -76,14 +76,14 @@ defmodule Xarango.Domain.Graph do
     |> SimpleQuery.by_example(database)
     |> Enum.map(&Edge.destroy(&1, edge_collection, graph, database))
   end
-  
+
   def get(from, relationship, to, database) when is_atom(relationship) do
     get(from, Atom.to_string(relationship), to, database)
   end
   def get(%{} = from_node, relationship, to, database) when is_binary(relationship) do
     edge_collection = %EdgeCollection{collection: relationship }
     Vertex.edges(from_node.vertex, edge_collection, [direction: "out"], database)
-    |> Enum.map(fn edge -> 
+    |> Enum.map(fn edge ->
       vertex = Vertex.vertex(%Vertex{_id: edge._to}, database)
       struct(to, %{vertex: vertex})
     end)
@@ -91,23 +91,23 @@ defmodule Xarango.Domain.Graph do
   def get(from, relationship, %{} = to_node, database) when is_binary(relationship) do
     edge_collection = %EdgeCollection{collection: relationship }
     Vertex.edges(to_node.vertex, edge_collection, [direction: "in"], database)
-    |> Enum.map(fn edge -> 
+    |> Enum.map(fn edge ->
       vertex = Vertex.vertex(%Vertex{_id: edge._from}, database)
       struct(from, %{vertex: vertex})
     end)
   end
-  
+
   def traverse(start, options, graph, database) do
     traversal = options
       |> Enum.into(%{})
       |> Map.merge(%{startVertex: start.vertex._id})
       |> Map.merge(%{graphName: graph.name})
       |> Map.merge(%{direction: "outbound"})
-    struct(Traversal, traversal)  
+    struct(Traversal, traversal)
     |> Traversal.traverse(database)
-    
+
   end
-      
+
   def ensure_collections(rel, graph, database) do
     {collection, from, to} = {rel[:name], apply(rel[:from], :_collection, []), apply(rel[:to], :_collection, [])}
     from |> VertexCollection.ensure(graph, database)
@@ -116,4 +116,3 @@ defmodule Xarango.Domain.Graph do
   end
 
 end
-

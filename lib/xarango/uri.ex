@@ -1,5 +1,5 @@
 defmodule Xarango.URI do
-  
+
   defmacro __using__(options) do
     prefix = options[:prefix]
     quote do
@@ -14,7 +14,7 @@ defmodule Xarango.URI do
       end
     end
   end
-  
+
   def path(path, database\\nil) do
     case database do
       nil -> path(path, Xarango.Database.default)
@@ -23,6 +23,5 @@ defmodule Xarango.URI do
       _ -> raise Xarango.Error, message: "invalid database for path"
     end
   end
-  
-    
+
 end

@@ -1,26 +1,26 @@
 defmodule DomainGraphTest do
   use ExUnit.Case
   doctest Xarango
-  
+
   setup do
     on_exit fn ->
       Xarango.Collection.__destroy_all()
       Xarango.Graph.__destroy_all()
-      try do Xarango.Collection.__destroy_all(_database) rescue _ -> nil end
-      try do Xarango.Graph.__destroy_all(_database) rescue _ -> nil end
+      try do Xarango.Collection.__destroy_all(_database()) rescue _ -> nil end
+      try do Xarango.Graph.__destroy_all(_database()) rescue _ -> nil end
     end
   end
-  
+
   test "create graph" do
     graph = TestGraph.create
     assert length(graph.graph.edgeDefinitions) == 3
   end
-  
+
   test "ensure graph collections" do
     graph = TestGraph.create
     assert length(graph.graph.edgeDefinitions) == 3
   end
-  
+
   test "add relationships" do
     TestGraph.ensure
     p1 = Person.create(%{name: "Alice"})
@@ -34,7 +34,7 @@ defmodule DomainGraphTest do
     assert String.starts_with?(likes._id, "likes/")
     assert String.starts_with?(has_brand._id, "has_brand/")
   end
-  
+
   test "list relationships" do
     TestGraph.ensure
     alice = Person.create(%{name: "Alice"})
@@ -48,7 +48,7 @@ defmodule DomainGraphTest do
     assert length(alice_likes) == 2
     assert length(alice_liked_by) == 1
   end
-  
+
   test "list db relationships" do
     TestDbGraph.ensure
     alice = DbPerson.create(%{name: "Alice"})
@@ -62,7 +62,7 @@ defmodule DomainGraphTest do
     assert length(alice_likes) == 2
     assert length(alice_liked_by) == 1
   end
-  
+
   test "remove relationships" do
     TestGraph.ensure
     alice = Person.create(%{name: "Alice"})
@@ -92,7 +92,7 @@ defmodule DomainGraphTest do
     assert length(graph.graph.edgeDefinitions) == 2
     assert length(graph.graph.orphanCollections) == 3
   end
-  
+
   test "add db relationships" do
     TestDbGraph.ensure
     outback = DbCar.create(%{type: "Outback"})
@@ -105,20 +105,20 @@ defmodule DomainGraphTest do
     assert length(outback_brands) == 1
     assert length(subaru_cars) == 2
   end
-  
+
   test "create collection name" do
     graph = App.CollGraph.TestCollGraph.create
     assert Enum.member?(graph.graph.orphanCollections, "all_people")
     assert Enum.member?(graph.graph.orphanCollections, "all_cars")
     assert Enum.member?(graph.graph.orphanCollections, "all_brands")
   end
-  
+
   test "create nested module name" do
     graph = App.Graph.TestModGraph.create
     assert length(graph.graph.edgeDefinitions) == 2
     assert length(graph.graph.orphanCollections) == 3
   end
-  
+
   test "traverse graph" do
     TestGraph.ensure
     alice = Person.create(%{name: "Alice"})
@@ -129,7 +129,7 @@ defmodule DomainGraphTest do
     TestGraph.add_likes(bob, alice)
     TestGraph.traverse(alice)
   end
-  
+
   test "traverse graph filtered" do
     TestGraph.ensure
     alice = Person.create(%{name: "Alice"})
@@ -149,7 +149,7 @@ defmodule DomainGraphTest do
     assert length(result.paths) == 1
     assert length(result.vertices) == 1
   end
-    
+
   defp _database do
     %Xarango.Database{name: "test_db"}
   end
@@ -162,7 +162,7 @@ defmodule Brand, do: use Xarango.Domain.Node, graph: TestGraph
 
 defmodule TestGraph do
   use Xarango.Domain.Graph, db: :_system
-  
+
   relationship Person, :likes, Person
   relationship Car, :has_brand, Brand
   relationship Truck, :has_brand, Brand
@@ -189,9 +189,9 @@ defmodule App.Graph.Nodes.Brand, do: use Xarango.Domain.Node, graph: App.Graph.T
 
 defmodule App.Graph.TestModGraph do
   use Xarango.Domain.Graph, db: :test_db
-  
+
   alias App.Graph.Nodes
-  
+
   relationship Nodes.Person, :likes, Nodes.Person
   relationship Nodes.Car, :has_brand, Nodes.Brand
 
@@ -210,6 +210,3 @@ defmodule App.CollGraph.TestCollGraph do
   relationship Nodes.Car, :has_brand, Nodes.Brand
 
 end
-
-
-
