@@ -13,7 +13,7 @@ defmodule IndexTest do
   end
   
   test "hash index" do
-    coll = _collection
+    coll = _collection()
     index = %Index{type: "hash", fields: ["field"]}
       |> Index.create(coll)
     refute index.error
@@ -22,7 +22,7 @@ defmodule IndexTest do
   end
     
   test "geo index loc" do
-    coll = _collection
+    coll = _collection()
     index = %Index{type: "geo", fields: ["location"], geoJson: true}
       |> Index.create(coll)
     refute index.error
@@ -31,7 +31,7 @@ defmodule IndexTest do
   end
   
   test "geo index lat/lon" do
-    coll = _collection
+    coll = _collection()
     index = %Index{type: "geo", fields: ["lat", "lon"], geoJson: true}
       |> Index.create(coll)
     refute index.error
@@ -41,7 +41,7 @@ defmodule IndexTest do
 
   
   test "destroy index" do
-    coll = _collection
+    coll = _collection()
     index = %Index{type: "hash", fields: ["field"]}
       |> Index.create(coll)
     result = Index.destroy(index)
@@ -52,7 +52,7 @@ defmodule IndexTest do
 
   
   defp _collection do
-    Collection.create(collection_) |> Collection.collection
+    Collection.create(collection_()) |> Collection.collection
   end
   
 end

@@ -13,7 +13,7 @@ defmodule UserTest do
   # end
   
   test "create user" do
-    source = user_
+    source = user_()
     user = User.create(source)
     User.destroy(user)
     assert user.active == true
@@ -21,7 +21,7 @@ defmodule UserTest do
   end
   
   test "get user" do
-    source = user_
+    source = user_()
     user = User.create(source)
     user = User.user(user)
     User.destroy(user)
@@ -36,7 +36,7 @@ defmodule UserTest do
   end
   
   test "replace user" do
-    source = user_
+    source = user_()
     user = User.create(source)
     new_user = %User{ user | active: false}
     user = User.replace(new_user)
@@ -46,7 +46,7 @@ defmodule UserTest do
   end
   
   test "update user" do
-    source = %User{ user_ | extra: %{jabba: "dabba"} }
+    source = %User{ user_() | extra: %{jabba: "dabba"} }
     user = User.create(source)
     new_user = %User{ user | extra: %{foo: "bar"} }
     user = User.update(new_user)
@@ -55,8 +55,8 @@ defmodule UserTest do
   end
 
   test "grant db access" do
-    db = Database.create(database_)
-    user = User.create(user_)
+    db = Database.create(database_())
+    user = User.create(user_())
     result = User.grant_access(user, db)
     assert Map.get(result, String.to_atom(db.name)) == "rw"
     User.destroy(user)
@@ -64,8 +64,8 @@ defmodule UserTest do
   end
   
   test "revoke db access" do
-    db = Database.create(database_)
-    user = User.create(user_)
+    db = Database.create(database_())
+    user = User.create(user_())
     result = User.revoke_access(user, db)
     User.destroy(user)
     Database.destroy(db)
@@ -79,7 +79,7 @@ defmodule UserTest do
   end
 
   test "destroy user" do
-    source = user_
+    source = user_()
     user = User.create(source)
     result = User.destroy(user)
     refute result[:error]

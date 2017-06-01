@@ -6,8 +6,8 @@ defmodule DomainGraphTest do
     on_exit fn ->
       Xarango.Collection.__destroy_all()
       Xarango.Graph.__destroy_all()
-      try do Xarango.Collection.__destroy_all(_database) rescue _ -> nil end
-      try do Xarango.Graph.__destroy_all(_database) rescue _ -> nil end
+      try do Xarango.Collection.__destroy_all(_database()) rescue _ -> nil end
+      try do Xarango.Graph.__destroy_all(_database()) rescue _ -> nil end
     end
   end
   

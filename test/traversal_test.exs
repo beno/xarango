@@ -18,7 +18,7 @@ defmodule TraversalTest do
   end
 
   test "do traversal" do
-    {graph, start_vertex} = _create_graph
+    {graph, start_vertex} = _create_graph()
     traversal = %Traversal{startVertex: start_vertex._id,
                            graphName: graph.name, 
                            uniqueness: %{edges: "path", vertices: "path"}, 
@@ -29,7 +29,7 @@ defmodule TraversalTest do
   end
   
   test "do traversal edge collection" do
-    {graph, start_vertex} = _create_graph
+    {graph, start_vertex} = _create_graph()
     ec = Enum.at(graph.edgeDefinitions, 0)
     traversal = %Traversal{startVertex: start_vertex._id, 
                            edgeCollection: ec.collection,
@@ -41,10 +41,10 @@ defmodule TraversalTest do
   end
   
   defp _create_graph do
-    vc = vertex_collection_
-    ec = edge_collection_
-    ec2 = edge_collection_
-    g = Graph.create(graph_)
+    vc = vertex_collection_()
+    ec = edge_collection_()
+    ec2 = edge_collection_()
+    g = Graph.create(graph_())
       |> Graph.add_vertex_collection(vc)
       |> Graph.add_edge_definition(%Xarango.EdgeDefinition{collection: ec.collection, from: [vc.collection], to: [vc.collection]})
       |> Graph.add_edge_definition(%Xarango.EdgeDefinition{collection: ec2.collection, from: [vc.collection], to: [vc.collection]})
@@ -71,7 +71,7 @@ defmodule TraversalTest do
   end
   
   defp person(name) do
-    %Vertex{ vertex_ | _data: %{name: name}}
+    %Vertex{ vertex_() | _data: %{name: name}}
   end
 
 end

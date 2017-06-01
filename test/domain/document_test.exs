@@ -5,8 +5,8 @@ defmodule DomainDocumentTest do
   setup do
     on_exit fn ->
       try do Xarango.Collection.__destroy_all() rescue _ -> nil end
-      try do Xarango.Collection.__destroy_all(_database) rescue _ -> nil end
-      try do Xarango.Database.destroy(_database) rescue _ -> nil end
+      try do Xarango.Collection.__destroy_all(_database()) rescue _ -> nil end
+      try do Xarango.Database.destroy(_database()) rescue _ -> nil end
     end
   end
 

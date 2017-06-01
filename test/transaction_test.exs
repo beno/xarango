@@ -1,3 +1,4 @@
+
 defmodule TransactionTest do
   use ExUnit.Case
   doctest Xarango
@@ -9,8 +10,8 @@ defmodule TransactionTest do
     on_exit fn ->
       Xarango.Graph.__destroy_all()
       Xarango.Collection.__destroy_all()
-      try do Xarango.Graph.__destroy_all(_database) rescue _ -> nil end
-      try do Xarango.Collection.__destroy_all(_database) rescue _ -> nil end
+      try do Xarango.Graph.__destroy_all(_database()) rescue _ -> nil end
+      try do Xarango.Collection.__destroy_all(_database()) rescue _ -> nil end
     end
   end
   

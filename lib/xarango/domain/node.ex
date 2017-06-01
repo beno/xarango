@@ -31,13 +31,13 @@ defmodule Xarango.Domain.Node do
       end
       def create(data, options\\[]) do
         apply(_graph_module(options), :ensure, [])
-        Node.create(data, _collection, _graph(options), _database(options)) |> to_node
+        Node.create(data, _collection(), _graph(options), _database(options)) |> to_node
       end
-      def one(params, options\\[]), do: Node.one(params, _collection, _graph(options), _database(options)) |> to_node
-      def list(params, options\\[]), do: Node.list(params, _collection, _graph(options), _database(options)) |> to_nodes
-      def replace(node, data, options\\[]), do: Node.replace(node, data, _collection, _graph(options), _database(options)) |> to_node
-      def update(node, data, options\\[]), do: Node.update(node, data, _collection, _graph(options), _database(options)) |> to_node
-      def destroy(node, options\\[]), do: Node.destroy(node, _collection, _graph(options), _database(options))
+      def one(params, options\\[]), do: Node.one(params, _collection(), _graph(options), _database(options)) |> to_node
+      def list(params, options\\[]), do: Node.list(params, _collection(), _graph(options), _database(options)) |> to_nodes
+      def replace(node, data, options\\[]), do: Node.replace(node, data, _collection(), _graph(options), _database(options)) |> to_node
+      def update(node, data, options\\[]), do: Node.update(node, data, _collection(), _graph(options), _database(options)) |> to_node
+      def destroy(node, options\\[]), do: Node.destroy(node, _collection(), _graph(options), _database(options))
       def fetch(node, field) do
         case field do
           :id -> {:ok, node.vertex._id}

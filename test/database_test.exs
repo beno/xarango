@@ -23,7 +23,7 @@ defmodule DatabaseTest do
   end
   
   test "create database" do
-    source = database_
+    source = database_()
     db = Database.create(source)
     Database.destroy(db)
     assert db.name == source.name
@@ -31,14 +31,14 @@ defmodule DatabaseTest do
   
   test "create database with users" do
     users = [%Xarango.User{username: "foo", passw: "bar", active: true}]
-    source = %Database{ database_ | users: users}
+    source = %Database{ database_() | users: users}
     db = Database.create(source)
     Database.destroy(db)
     assert db.name == source.name
   end
   
   test "delete database" do
-    db = Database.create(database_)
+    db = Database.create(database_())
     result = Database.destroy(db)
     assert result[:result] == true
     assert result[:error] == false

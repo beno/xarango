@@ -41,8 +41,8 @@ defmodule QueryTest do
   
   
   defp _documents(count) do
-    coll = Xarango.Collection.create(collection_)
-    docs = Enum.map(1..count, fn _ -> Document.create(document_, coll) end)
+    coll = Xarango.Collection.create(collection_())
+    docs = Enum.map(1..count, fn _ -> Document.create(document_(), coll) end)
     {coll, docs}
   end
     

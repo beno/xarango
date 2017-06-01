@@ -96,7 +96,7 @@ defmodule SimpleQueryTest do
   end
   
   test "near" do
-    coll = Xarango.Collection.create(collection_)
+    coll = Xarango.Collection.create(collection_())
     index = %Xarango.Index{type: "geo", fields: ["lat", "lon"], geoJson: true}
       |> Xarango.Index.create(coll)
     _geo_documents(10, coll)
@@ -108,7 +108,7 @@ defmodule SimpleQueryTest do
   end
   
   test "within" do
-    coll = Xarango.Collection.create(collection_)
+    coll = Xarango.Collection.create(collection_())
     index = %Xarango.Index{type: "geo", fields: ["lat", "lon"], geoJson: true}
       |> Xarango.Index.create(coll)
     _geo1_documents(10, coll)
@@ -120,7 +120,7 @@ defmodule SimpleQueryTest do
   end
 
   test "within rectangle" do
-    coll = Xarango.Collection.create(collection_)
+    coll = Xarango.Collection.create(collection_())
     index = %Xarango.Index{type: "geo", fields: ["lat", "lon"], geoJson: true}
       |> Xarango.Index.create(coll)
     _geo1_documents(10, coll)
@@ -132,7 +132,7 @@ defmodule SimpleQueryTest do
   end
   
   test "fulltext" do
-    coll = Xarango.Collection.create(collection_)
+    coll = Xarango.Collection.create(collection_())
     index = %Xarango.Index{type: "fulltext", fields: ["field"]}
       |> Xarango.Index.create(coll)
     _documents(4, coll, ["apple", "pear", "banana", "apricot"])
@@ -144,33 +144,33 @@ defmodule SimpleQueryTest do
   end
 
   defp _documents(count) do
-    coll = Xarango.Collection.create(collection_)
+    coll = Xarango.Collection.create(collection_())
     _documents(count, coll)
   end
   
   defp _documents(count, collection) do
-    docs = Enum.map(1..count, fn _ -> Document.create(document_, collection) end)
+    docs = Enum.map(1..count, fn _ -> Document.create(document_(), collection) end)
     {collection, docs}
   end
   
   defp _documents(count, collection, values) do
     docs = Enum.map(1..count, fn ct ->
       data = %{field: Enum.at(values, ct-1)}
-      Document.create(%Document{ document_ | _data: data}, collection)
+      Document.create(%Document{ document_() | _data: data}, collection)
     end)
     {collection, docs}
   end
   
   defp _geo_documents(count, coll) do
     Enum.map(1..count, fn _ -> 
-      %Document{ document_ | _data: %{lat: Faker.Address.latitude, lon: Faker.Address.longitude} }
+      %Document{ document_() | _data: %{lat: Faker.Address.latitude, lon: Faker.Address.longitude} }
       |> Document.create(coll) 
     end)
   end
   
   defp _geo1_documents(count, coll) do
     Enum.map(1..count, fn _ -> 
-      %Document{ document_ | _data: %{lat: _num, lon: _num} }
+      %Document{ document_() | _data: %{lat: _num(), lon: _num()} }
       |> Document.create(coll) 
     end)
   end

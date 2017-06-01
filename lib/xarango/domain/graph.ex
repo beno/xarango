@@ -22,18 +22,18 @@ defmodule Xarango.Domain.Graph do
       defp _graph, do: %Graph{name: unquote(gr) || Xarango.Util.name_from(__MODULE__) }
       defp _relationships, do: []
       defoverridable [_relationships: 0]
-      def create, do: ensure
+      def create, do: ensure()
       def ensure do
-        Database.ensure(_database)
-        Graph.ensure(_graph, _database)
-        Enum.each(_relationships, &ensure_collections(&1, _graph, _database))
-        struct(__MODULE__, graph: Graph.graph(_graph, _database))
+        Database.ensure(_database())
+        Graph.ensure(_graph(), _database())
+        Enum.each(_relationships(), &ensure_collections(&1, _graph(), _database()))
+        struct(__MODULE__, graph: Graph.graph(_graph(), _database()))
       end
-      def destroy, do: Graph.destroy(_graph.graph, _database)
-      def add(from, relationship, to, data\\nil), do: add(from, relationship, to, data, _graph, _database)
-      def remove(from, relationship, to), do: remove(from, relationship, to, _graph, _database)
-      def get(from, relationship, to), do: get(from, relationship, to, _database)
-      def traverse(start, options\\[]), do: traverse(start, options, _graph, _database)
+      def destroy, do: Graph.destroy(_graph().graph, _database())
+      def add(from, relationship, to, data\\nil), do: add(from, relationship, to, data, _graph(), _database())
+      def remove(from, relationship, to), do: remove(from, relationship, to, _graph(), _database())
+      def get(from, relationship, to), do: get(from, relationship, to, _database())
+      def traverse(start, options\\[]), do: traverse(start, options, _graph(), _database())
     end
   end
   
