@@ -33,7 +33,6 @@ defmodule Xarango.Domain.Node do
         apply(_graph_module(options), :ensure, [])
         Node.create(data, _collection(), _graph(options), _database(options)) |> to_node
       end
-      def id(node), do: node.vertex._id
       def one(params, options\\[]), do: Node.one(params, _collection(), _graph(options), _database(options)) |> to_node
       def list(params, options\\[]), do: Node.list(params, _collection(), _graph(options), _database(options)) |> to_nodes
       def replace(node, data, options\\[]), do: Node.replace(node, data, _collection(), _graph(options), _database(options)) |> to_node
@@ -41,8 +40,8 @@ defmodule Xarango.Domain.Node do
       def destroy(node, options\\[]), do: Node.destroy(node, _collection(), _graph(options), _database(options))
       def fetch(node, field) do
         case field do
-          :id -> {:ok, id(node)}
-          "id" -> {:ok, id(node)}
+          :id -> {:ok, node.vertex._id}
+          "id" -> {:ok, node.vertex._id}
           value -> {:ok, get_in(node.vertex._data, List.wrap(field))}
         end
       end
