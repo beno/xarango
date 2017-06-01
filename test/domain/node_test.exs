@@ -5,9 +5,9 @@ defmodule DomainNodeTest do
   setup do
     on_exit fn ->
       Xarango.Graph.__destroy_all()
-      Xarango.Graph.__destroy_all(_database)
+      Xarango.Graph.__destroy_all(_database())
       Xarango.Collection.__destroy_all()
-      Xarango.Collection.__destroy_all(_database)
+      Xarango.Collection.__destroy_all(_database())
     end
   end
 
@@ -126,7 +126,6 @@ defmodule NodeTestGraph2 do
   use Xarango.Domain.Graph
 end
 
-
 defmodule TestNoGraphNode do
   use Xarango.Domain.Node
 end
@@ -135,13 +134,9 @@ defmodule TestNodeDbGraph do
   use Xarango.Domain.Graph, db: :test_database
 end
 
-
 defmodule TestNode do
   use Xarango.Domain.Node, graph: NodeTestGraph
 end
-
-
-
 
 defmodule TestDbNode do
   use Xarango.Domain.Node, graph: TestNodeDbGraph
