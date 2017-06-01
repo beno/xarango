@@ -7,13 +7,13 @@ defmodule Xarango.Database do
   defstruct [:id, :name, :isSystem, :path, :users]
   
   def databases() do
-    url("", system)
+    url("", system())
     |> get
     |> Enum.map(fn name -> struct(Database, [name: name])  end)
   end
   
   def user_databases() do
-    url("user", system)
+    url("user", system())
     |> get
     |> Map.get(:result)
     |> Enum.map(&to_database(%{name: &1}))
@@ -26,13 +26,13 @@ defmodule Xarango.Database do
   end
   
   def create(database) do
-    url("", system)
+    url("", system())
     |> post(database)
     database
   end
   
   def destroy(database) do
-    url(database.name, system)
+    url(database.name, system())
     |> delete
   end
   
