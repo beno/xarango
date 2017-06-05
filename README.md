@@ -120,7 +120,7 @@ The package can be installed as:
 
     ```elixir
     def deps do
-      [{:xarango, "~> 0.4.1"}]
+      [{:xarango, "~> 0.5.0"}]
     end
     ```
 
