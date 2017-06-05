@@ -46,7 +46,8 @@ defmodule Xarango.Domain.Node do
         db = _database(options)
         graph = _graph(options)
         apply(_graph_module(options), :ensure, [])
-        Node.create(data, _collection(), _graph(options), _database(options)) |> to_node
+        collection = Xarango.VertexCollection.ensure(_collection(), graph, db, indexes())
+        Node.create(data, collection, _graph(options), _database(options)) |> to_node
       end
       def one(params, options\\[]), do: Node.one(params, _collection(), _graph(options), _database(options)) |> to_node
       def list(params, options\\[]), do: Node.list(params, _collection(), _graph(options), _database(options)) |> to_nodes

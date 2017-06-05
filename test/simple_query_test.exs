@@ -98,7 +98,7 @@ defmodule SimpleQueryTest do
   test "near" do
     coll = Xarango.Collection.create(collection_())
     index = %Xarango.Index{type: "geo", fields: ["lat", "lon"], geoJson: true}
-      |> Xarango.Index.create(coll)
+      |> Xarango.Index.create(coll.name)
     _geo_documents(10, coll)
     query = %SimpleQuery{collection: coll.name, latitude: Faker.Address.latitude, longitude: Faker.Address.longitude, limit: 100}
     result = SimpleQuery.near(query)
@@ -110,7 +110,7 @@ defmodule SimpleQueryTest do
   test "within" do
     coll = Xarango.Collection.create(collection_())
     index = %Xarango.Index{type: "geo", fields: ["lat", "lon"], geoJson: true}
-      |> Xarango.Index.create(coll)
+      |> Xarango.Index.create(coll.name)
     _geo1_documents(10, coll)
     query = %SimpleQuery{collection: coll.name, latitude: 0, longitude: 0, radius: 1000, attribute: "distance", skip: 0 }
     result = SimpleQuery.within(query)
@@ -122,7 +122,7 @@ defmodule SimpleQueryTest do
   test "within rectangle" do
     coll = Xarango.Collection.create(collection_())
     index = %Xarango.Index{type: "geo", fields: ["lat", "lon"], geoJson: true}
-      |> Xarango.Index.create(coll)
+      |> Xarango.Index.create(coll.name)
     _geo1_documents(10, coll)
     query = %SimpleQuery{collection: coll.name, latitude1: 0, longitude1: 0, latitude2: 1, longitude2: 1, skip: 0, limit: 100}
     result = SimpleQuery.within_rectangle(query)
@@ -134,7 +134,7 @@ defmodule SimpleQueryTest do
   test "fulltext" do
     coll = Xarango.Collection.create(collection_())
     index = %Xarango.Index{type: "fulltext", fields: ["field"]}
-      |> Xarango.Index.create(coll)
+      |> Xarango.Index.create(coll.name)
     _documents(4, coll, ["apple", "pear", "banana", "apricot"])
     query = %SimpleQuery{collection: coll.name, query: "prefix:ap", attribute: "field", limit: 100 }
     result = SimpleQuery.fulltext(query)

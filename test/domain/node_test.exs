@@ -147,15 +147,9 @@ end
 defmodule TestDbNode do
   use Xarango.Domain.Node, graph: TestNodeDbGraph
 end
-<<<<<<< HEAD
 
 defmodule TestIndexNode do
   use Xarango.Domain.Node, graph: NodeTestGraph
   
   index :fulltext, :jabba
 end
-
-
-
-=======
->>>>>>> origin/master

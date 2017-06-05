@@ -107,13 +107,6 @@ defmodule DomainDocumentTest do
   defp _database do
     %Xarango.Database{name: "test_db"}
   end
-<<<<<<< HEAD
-=======
-
-  # defp _collection do
-  #   %Xarango.Collection{name: "test_model"}
-  # end
->>>>>>> origin/master
 
 
 end
@@ -125,12 +118,9 @@ end
 defmodule TestDbModel do
   use Xarango.Domain.Document, db: :test_db
 end
-<<<<<<< HEAD
 
 defmodule TestDbIndexModel do
   use Xarango.Domain.Document, db: :test_db
   
   index :fulltext, :jabba
 end
-=======
->>>>>>> origin/master
