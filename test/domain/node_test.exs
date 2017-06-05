@@ -108,6 +108,13 @@ defmodule DomainNodeTest do
     assert model[:jabba] == "dabba"
   end
   
+  test "creates index for model and searches it" do
+    model = TestIndexNode.create(%{jabba: "dabba"})
+    result = TestIndexNode.search(:jabba, "dab")
+    assert model[:id] == Enum.at(result, 0)._id
+  end
+
+  
   defp _database, do: %Xarango.Database{name: "test_database"}
   
 end
@@ -141,5 +148,12 @@ end
 defmodule TestDbNode do
   use Xarango.Domain.Node, graph: TestNodeDbGraph
 end
+
+defmodule TestIndexNode do
+  use Xarango.Domain.Node, graph: NodeTestGraph
+  
+  index :fulltext, :jabba
+end
+
 
 

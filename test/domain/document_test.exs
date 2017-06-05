@@ -97,14 +97,16 @@ defmodule DomainDocumentTest do
     model = TestDbModel.create(%{jabba: "dabba"})
     assert model[:jabba] == "dabba"
   end
-
+  
+  test "creates index for model and searches it" do
+    model = TestDbIndexModel.create(%{jabba: "dabba"})
+    result = TestDbIndexModel.search(:jabba, "dab")
+    assert model[:id] == Enum.at(result, 0)[:id]
+  end
+  
   defp _database do
     %Xarango.Database{name: "test_db"}
   end
-  
-  # defp _collection do
-  #   %Xarango.Collection{name: "test_model"}
-  # end
 
   
 end
@@ -115,4 +117,10 @@ end
 
 defmodule TestDbModel do
   use Xarango.Domain.Document, db: :test_db
+end
+
+defmodule TestDbIndexModel do
+  use Xarango.Domain.Document, db: :test_db
+  
+  index :fulltext, :jabba
 end

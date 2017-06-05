@@ -128,11 +128,12 @@ defmodule Xarango.VertexCollection do
     |> Enum.map(&to_vertex(&1))
   end
   
-  def ensure(collection, graph, database\\nil) do
+  def ensure(collection, graph, database\\nil, indexes\\[]) do
     collections = Xarango.Graph.vertex_collections(graph, database) |> Enum.map(&Map.get(&1, :collection))
     case Enum.member?(collections, collection.collection) do
       false ->
         Xarango.Graph.add_vertex_collection(graph, collection, database)
+        Enum.each(indexes, fn index -> Xarango.Index.create(index, collection.collection, database) end)
         collection
       true -> collection
     end

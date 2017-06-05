@@ -5,8 +5,10 @@ defmodule Xarango.Server do
   import Xarango.Client
 
   def server do
-    Application.get_env(:xarango, :db)
-    |> to_server
+    case Application.get_env(:xarango, :db) do
+      nil -> raise Xarango.Error, message: "no configuration set"
+      config -> to_server(config)
+    end
   end
   
   #details

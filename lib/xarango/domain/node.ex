@@ -2,13 +2,26 @@ defmodule Xarango.Domain.Node do
   
   alias Xarango.Vertex
   alias Xarango.SimpleQuery
+  alias Xarango.Index
+  
+  defmacro index(type, field) do
+    quote do
+      @indexes %Index{type: Atom.to_string(unquote(type)), fields: [Atom.to_string(unquote(field))]}
+      defp indexes, do: @indexes
+      defoverridable [indexes: 0]
+    end
+  end
   
   defmacro __using__(options\\[]) do
     graph = options[:graph]
     collection = options[:collection]
     quote do
       alias Xarango.Domain.Node
+      import Xarango.Domain.Node, only: [index: 2]
       defstruct vertex: %Xarango.Vertex{}
+      Module.register_attribute __MODULE__, :indexes, accumulate: true
+      defp indexes, do: []
+      defoverridable [indexes: 0]
       defp _graph_module(options) do
         case options[:graph] || unquote(graph) do
           nil -> raise Xarango.Error, message: "graph not set for #{__MODULE__}"
@@ -30,8 +43,11 @@ defmodule Xarango.Domain.Node do
         %Xarango.VertexCollection{collection: collection}
       end
       def create(data, options\\[]) do
+        db = _database(options)
+        graph = _graph(options)
         apply(_graph_module(options), :ensure, [])
-        Node.create(data, _collection(), _graph(options), _database(options)) |> to_node
+        collection = Xarango.VertexCollection.ensure(_collection(), graph, db, indexes())
+        Node.create(data, collection, graph, db) |> to_node
       end
       def one(params, options\\[]), do: Node.one(params, _collection(), _graph(options), _database(options)) |> to_node
       def list(params, options\\[]), do: Node.list(params, _collection(), _graph(options), _database(options)) |> to_nodes
@@ -47,13 +63,17 @@ defmodule Xarango.Domain.Node do
       end
       defp to_node(vertex), do: struct(__MODULE__, vertex: vertex)
       defp to_nodes(vertices), do: vertices |> Enum.map(&struct(__MODULE__, vertex: &1))
+      def search(field, value) do
+        %Xarango.Query{query: "FOR doc IN FULLTEXT(#{_collection().collection}, \"#{field}\", \"prefix:#{value}\") RETURN doc", batchSize: 3}
+        |> Xarango.Query.query(_database([]))
+        |> Map.get(:result)
+      end
     end
   end
   
   def create(data, collection, graph, database) do
-    vc = Xarango.VertexCollection.ensure(collection, graph, database)
-    Vertex.create(%Vertex{_data: data}, vc, graph, database)
-    |> Vertex.vertex(vc, graph, database)
+    Vertex.create(%Vertex{_data: data}, collection, graph, database)
+    |> Vertex.vertex(collection, graph, database)
   end
   
   def one(params, collection, edges, _graph, database) when is_list(edges) do
@@ -93,5 +113,6 @@ defmodule Xarango.Domain.Node do
     doc = Map.from_struct(document)
     struct(Xarango.Vertex, doc) 
   end
+  
       
 end

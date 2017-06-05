@@ -3,6 +3,7 @@ defmodule Xarango.Collection do
       :doCompact, :isVolatile, :shardKeys, :numberOfShards, :isSystem, :type, :indexBuckets, :status, :error,  :count, :figures, :revision, :checksum]
   
   alias Xarango.Collection
+  alias Xarango.Index
   import Xarango.Client
   use Xarango.URI, prefix: "collection"
   
@@ -60,11 +61,15 @@ defmodule Xarango.Collection do
     |> delete
   end
   
-  def ensure(collection, database\\nil) do
+  def ensure(collection, database\\nil, indexes\\[]) do
     try do
       collection(collection, database)
     rescue
-      Xarango.Error -> create(collection, database)
+      Xarango.Error ->
+        create(collection, database)
+        Enum.each indexes, fn index ->
+          Index.create(index, collection.name, database)
+        end
     end
   end
   
