@@ -20,26 +20,26 @@ defmodule TraversalTest do
   test "do traversal" do
     {graph, start_vertex} = _create_graph()
     traversal = %Traversal{startVertex: start_vertex._id,
-                           graphName: graph.name, 
-                           uniqueness: %{edges: "path", vertices: "path"}, 
+                           graphName: graph.name,
+                           uniqueness: %{edges: "path", vertices: "path"},
                            direction: "outbound"}
     result = Traversal.traverse(traversal)
     assert length(result.paths) == 9
     assert length(result.vertices) == 9
   end
-  
+
   test "do traversal edge collection" do
     {graph, start_vertex} = _create_graph()
     ec = Enum.at(graph.edgeDefinitions, 0)
-    traversal = %Traversal{startVertex: start_vertex._id, 
+    traversal = %Traversal{startVertex: start_vertex._id,
                            edgeCollection: ec.collection,
-                           uniqueness: %{edges: "global", vertices: "global"}, 
+                           uniqueness: %{edges: "global", vertices: "global"},
                            direction: "outbound"}
     result = Traversal.traverse(traversal)
     assert length(result.paths) == 4
     assert length(result.vertices) == 4
   end
-  
+
   defp _create_graph do
     vc = vertex_collection_()
     ec = edge_collection_()
@@ -69,7 +69,7 @@ defmodule TraversalTest do
     end)
     {g, alice}
   end
-  
+
   defp person(name) do
     %Vertex{ vertex_() | _data: %{name: name}}
   end

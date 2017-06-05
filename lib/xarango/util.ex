@@ -71,9 +71,9 @@ defmodule Xarango.Util do
 
   defp pluck_data(doc, struct) do
     keys = Map.keys(struct.__struct__)
-    Enum.reduce(doc, %{}, fn {k,v}, acc -> 
+    Enum.reduce(doc, %{}, fn {k,v}, acc ->
       if v == nil || Enum.member?(keys, k), do: acc, else: Map.put(acc, k, v)
-    end)    
+    end)
   end
 
   def do_error(msg) do

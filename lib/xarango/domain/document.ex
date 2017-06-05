@@ -1,5 +1,5 @@
 defmodule Xarango.Domain.Document do
-  
+
   alias Xarango.Document
   alias Xarango.SimpleQuery
   alias Xarango.Index
@@ -60,6 +60,7 @@ defmodule Xarango.Domain.Document do
           |> Map.get(field)
         {:ok, value}
       end
+
       defp to_document(data) do
         struct(__MODULE__, doc: data)
       end
@@ -70,6 +71,6 @@ defmodule Xarango.Domain.Document do
       end
     end
   end
-  
-      
+
+
 end

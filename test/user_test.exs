@@ -5,13 +5,13 @@ defmodule UserTest do
 
   alias Xarango.User
   alias Xarango.Database
-  # 
+  #
   # setup do
   #   on_exit fn ->
   #     Collection.__destroy_all
   #   end
   # end
-  
+
   test "create user" do
     source = user_()
     user = User.create(source)
@@ -19,7 +19,7 @@ defmodule UserTest do
     assert user.active == true
     assert user.user == source.user
   end
-  
+
   test "get user" do
     source = user_()
     user = User.create(source)
@@ -34,7 +34,7 @@ defmodule UserTest do
     assert is_list(users)
     assert length(users) > 0
   end
-  
+
   test "replace user" do
     source = user_()
     user = User.create(source)
@@ -44,7 +44,7 @@ defmodule UserTest do
     assert user.active == false
     assert user.user == source.user
   end
-  
+
   test "update user" do
     source = %User{ user_() | extra: %{jabba: "dabba"} }
     user = User.create(source)
@@ -62,7 +62,7 @@ defmodule UserTest do
     User.destroy(user)
     Database.destroy(db)
   end
-  
+
   test "revoke db access" do
     db = Database.create(database_())
     user = User.create(user_())
@@ -71,7 +71,7 @@ defmodule UserTest do
     Database.destroy(db)
     assert Map.get(result, String.to_atom(db.name)) == "none"
   end
-  
+
   test "raise user" do
     assert_raise Xarango.Error, "username and/or password not set", fn ->
       User.create(%User{})
@@ -88,5 +88,5 @@ defmodule UserTest do
   # defp _collection do
   #   Collection.create(collection_) |> Collection.collection
   # end
-  
+
 end

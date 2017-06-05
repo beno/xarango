@@ -4,7 +4,7 @@ defmodule GraphTest do
   import Xarango.TestHelper
 
   alias Xarango.Graph
-  
+
   setup do
     on_exit fn ->
       Graph.__destroy_all
@@ -16,31 +16,31 @@ defmodule GraphTest do
     graphs = Graph.graphs
     assert is_list(graphs)
   end
-  
+
   test "create graph" do
     source = graph_()
     graph = Graph.create(source)
     assert graph.name == source.name
   end
-    
+
   test "read graph" do
     graph = Graph.create(graph_())
     result = Graph.graph(graph)
     assert result.name == graph.name
   end
-  
+
   test "destroy graph" do
     result = Graph.create(graph_())
       |> Graph.destroy
     assert result[:removed] == true
   end
-  
+
   test "list vertex collections" do
     result = Graph.create(graph_())
       |> Graph.vertex_collections
     assert is_list(result)
   end
-  
+
   test "list vertices" do
     collection = vertex_collection_()
     graph = Graph.create(graph_())
@@ -50,14 +50,14 @@ defmodule GraphTest do
     vertices = Xarango.VertexCollection.vertices(collection)
     assert length(vertices) == 2
   end
-  
+
   test "add vertex collection" do
     collection = vertex_collection_()
     graph = Graph.create(graph_())
       |> Graph.add_vertex_collection(collection)
     assert graph.orphanCollections == [collection.collection]
   end
-  
+
   test "remove vertex collection" do
     collection = vertex_collection_()
     graph = Graph.create(graph_())
@@ -71,7 +71,7 @@ defmodule GraphTest do
     edge_defs = Graph.edge_definitions(graph)
     assert is_list(edge_defs)
   end
-  
+
   test "add edge definition" do
     edge_def = edge_def_()
     graph = Graph.create(graph_())

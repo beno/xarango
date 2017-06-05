@@ -20,7 +20,7 @@ defmodule DomainNodeTest do
     node = TestNode.create(%{jabba: "dabba"}, graph: NodeTestGraph2)
     assert node.vertex._data == %{jabba: "dabba"}
   end
-  
+
   test "create no graph node in graph" do
     node = TestNoGraphNode.create(%{jabba: "dabba"}, graph: NodeTestGraph2)
     assert node.vertex._data == %{jabba: "dabba"}
@@ -34,21 +34,21 @@ defmodule DomainNodeTest do
 
   test "create node in db" do
     node = TestDbNode.create(%{jabba: "dabba"})
-    assert node.vertex._data == %{jabba: "dabba"} 
+    assert node.vertex._data == %{jabba: "dabba"}
   end
-  
+
   test "get one node" do
     source = TestNode.create(%{jabba: "dabba"})
     model = TestNode.one(%{_id: source.vertex._id})
     assert model.vertex._data == %{jabba: "dabba"}
   end
-  
+
   test "get one model in db" do
     source = TestDbNode.create(%{jabba: "dabba"})
     model = TestDbNode.one(%{_id: source.vertex._id})
     assert model.vertex._data == %{jabba: "dabba"}
   end
-  
+
   test "get model list" do
     source = TestNode.create(%{jabba: "dabba"})
     TestNode.create(%{dabba: "doo"})
@@ -57,7 +57,7 @@ defmodule DomainNodeTest do
     assert length(models) == 1
     assert Enum.at(models, 0).vertex._data == source.vertex._data
   end
-  
+
   test "list nodes in db" do
     source = TestDbNode.create(%{jabba: "dabba"})
     TestDbNode.create(%{dabba: "doo"})
@@ -66,43 +66,43 @@ defmodule DomainNodeTest do
     assert length(models) == 1
     assert Enum.at(models, 0).vertex._data == source.vertex._data
   end
-  
+
   test "replace node" do
     source = TestNode.create(%{jabba: "dabba"})
     model = TestNode.replace(source,  %{foo: "bar"})
     assert model.vertex._data == %{foo: "bar"}
   end
-  
+
   test "replace node in db" do
     source = TestDbNode.create(%{jabba: "dabba"})
     model = TestDbNode.replace(source,  %{foo: "bar"})
     assert model.vertex._data == %{foo: "bar"}
   end
-  
+
   test "update node" do
     source = TestNode.create(%{jabba: "dabba"})
     model = TestNode.update(source,  %{foo: "bar"})
     assert model.vertex._data == %{jabba: "dabba", foo: "bar"}
   end
-  
+
   test "update node in db" do
     source = TestDbNode.create(%{jabba: "dabba"})
     model = TestDbNode.update(source,  %{foo: "bar"})
     assert model.vertex._data == %{jabba: "dabba", foo: "bar"}
   end
-  
+
   test "destroy node" do
     source = TestNode.create(%{jabba: "dabba"})
     result = TestNode.destroy(source)
     assert result[:removed] == true
   end
-  
+
   test "destroy node in db" do
     source = TestDbNode.create(%{jabba: "dabba"})
     result = TestDbNode.destroy(source)
     assert result[:removed] == true
   end
-  
+
   test "access" do
     model = TestDbNode.create(%{jabba: "dabba"})
     assert model[:jabba] == "dabba"
@@ -114,9 +114,8 @@ defmodule DomainNodeTest do
     assert model[:id] == Enum.at(result, 0)._id
   end
 
-  
   defp _database, do: %Xarango.Database{name: "test_database"}
-  
+
 end
 
 defmodule NodePerson do
@@ -125,7 +124,7 @@ end
 
 defmodule NodeTestGraph do
   use Xarango.Domain.Graph
-  
+
   relationship NodePerson, :likes, NodePerson
 end
 
@@ -148,6 +147,7 @@ end
 defmodule TestDbNode do
   use Xarango.Domain.Node, graph: TestNodeDbGraph
 end
+<<<<<<< HEAD
 
 defmodule TestIndexNode do
   use Xarango.Domain.Node, graph: NodeTestGraph
@@ -157,3 +157,5 @@ end
 
 
 
+=======
+>>>>>>> origin/master

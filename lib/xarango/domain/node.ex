@@ -1,5 +1,5 @@
 defmodule Xarango.Domain.Node do
-  
+
   alias Xarango.Vertex
   alias Xarango.SimpleQuery
   alias Xarango.Index
@@ -46,8 +46,7 @@ defmodule Xarango.Domain.Node do
         db = _database(options)
         graph = _graph(options)
         apply(_graph_module(options), :ensure, [])
-        collection = Xarango.VertexCollection.ensure(_collection(), graph, db, indexes())
-        Node.create(data, collection, graph, db) |> to_node
+        Node.create(data, _collection(), _graph(options), _database(options)) |> to_node
       end
       def one(params, options\\[]), do: Node.one(params, _collection(), _graph(options), _database(options)) |> to_node
       def list(params, options\\[]), do: Node.list(params, _collection(), _graph(options), _database(options)) |> to_nodes
@@ -70,12 +69,12 @@ defmodule Xarango.Domain.Node do
       end
     end
   end
-  
+
   def create(data, collection, graph, database) do
     Vertex.create(%Vertex{_data: data}, collection, graph, database)
     |> Vertex.vertex(collection, graph, database)
   end
-  
+
   def one(params, collection, edges, _graph, database) when is_list(edges) do
     SimpleQuery.by_example(%SimpleQuery{example: params, collection: collection.collection}, database) |> to_vertex
   end
@@ -86,33 +85,31 @@ defmodule Xarango.Domain.Node do
       _ -> SimpleQuery.first_example(%SimpleQuery{example: params, collection: collection.collection}, database) |> to_vertex
     end
   end
-  
+
   def list(params, collection, _graph, database) do
     SimpleQuery.by_example(%SimpleQuery{example: params, collection: collection.collection}, database)
     |> Enum.map(&to_vertex(&1))
   end
-  
+
   def replace(node, data, collection, graph, database) do
     %{ node.vertex | _data: data }
     |> Vertex.replace(collection, graph, database)
     |> Vertex.vertex(collection, graph, database)
   end
-  
+
   def update(node, data, collection, graph, database) do
     %{ node.vertex | _data: data }
     |> Vertex.update(collection, graph, database)
     |> Vertex.vertex(collection, graph, database)
   end
-  
+
   def destroy(node, collection, graph, database) do
     node.vertex
     |> Vertex.destroy(collection, graph, database)
   end
-  
+
   defp to_vertex(document) do
     doc = Map.from_struct(document)
-    struct(Xarango.Vertex, doc) 
+    struct(Xarango.Vertex, doc)
   end
-  
-      
 end

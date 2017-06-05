@@ -23,14 +23,14 @@ defmodule Xarango.Mixfile do
     Client library for ArangoDB.
     """
   end
-  
+
   defp package do
     [
      name: :xarango,
      files: ["lib", "mix.exs", "README*", "LICENSE"],
      maintainers: ["Michel Benevento"],
      licenses: ["Apache 2.0"],
-     links: %{"GitHub" => "https://github.com/beno/xarango"} 
+     links: %{"GitHub" => "https://github.com/beno/xarango"}
     ]
   end
 

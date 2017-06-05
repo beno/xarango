@@ -7,7 +7,7 @@ defmodule Xarango.Transaction do
   alias Xarango.Edge
   alias Xarango.Vertex
   use Xarango.URI, prefix: "transaction"
-  
+
   def begin(), do: %Transaction{}
   def begin(graph) do
     apply(graph, :ensure, [])
@@ -28,7 +28,7 @@ defmodule Xarango.Transaction do
     |> Map.get(:result)
     |> to_result(return_type, database)
   end
-  
+
   defp finalize(%{action: action} = transaction) when is_binary(action) do
     %Transaction{transaction | return: nil, graph: nil}
   end
@@ -40,16 +40,16 @@ defmodule Xarango.Transaction do
     action = fnwrap("var db = require('@arangodb').db;" <> action)
     %Transaction{transaction | action: action, return: nil, graph: nil}
   end
-    
+
   def create(transaction, collection, data, options\\[]) do
     action = "db.#{jsify(collection)}.insert(#{jsify(data)})"
     action = parameterize(options[:var], action, collection)
     merge(transaction, %Transaction{action: action, collections: %{write: [jsify(collection)]}, return: collection})
   end
-  
+
   def update(transaction, collection, data, options\\[]) do
     {id, data} = Map.pop(data, :id)
-    action = "db.#{jsify(collection)}.update(#{jsify(id)}, #{jsify(data)})" 
+    action = "db.#{jsify(collection)}.update(#{jsify(id)}, #{jsify(data)})"
     action = parameterize(options[:var], action, collection)
     merge(transaction, %Transaction{action: action, collections: %{write: [jsify(collection)]}, return: collection})
   end
@@ -66,12 +66,12 @@ defmodule Xarango.Transaction do
     action = parameterize(options[:var], action, collection)
     merge(transaction, %Transaction{action: action, collections: %{write: [jsify(collection)]}, return: collection})
   end
-  
+
   def destroy(transaction, collection, node) do
     action = "(db.#{jsify(collection)}.delete(#{jsify(node.vertex)}))"
     merge(transaction, %Transaction{action: action, collections: %{write: [jsify(collection)]}})
   end
-  
+
   def add(transaction, nil), do: transaction
   def add(transaction, edges) when is_list(edges) do
     Enum.reduce(edges, transaction, fn {from, relationship, to}, transaction ->
@@ -90,7 +90,7 @@ defmodule Xarango.Transaction do
     action = "(db.#{relationship}.firstExample(#{edge}) || db.#{relationship}.save(#{edge}))"
     merge(transaction, %Transaction{action: action, collections: %{write: [relationship], read: [relationship]}, return: Edge})
   end
-  
+
   def remove(transaction, from, relationship, to) do
     edge = %Edge{_from: vertex_id(from),  _to: vertex_id(to)} |> jsify
     action = "db.#{relationship}.removeByExample(#{edge})"
@@ -106,21 +106,21 @@ defmodule Xarango.Transaction do
       is_module(to) -> {%Edge{_from: vertex_id(from)}, {to, :_to}}
       is_module(from) -> {%Edge{_to: vertex_id(to)}, {from, :_from}}
     end
-    action = "db.#{relationship}.byExample(#{jsify(edge)}).toArray()" 
+    action = "db.#{relationship}.byExample(#{jsify(edge)}).toArray()"
     merge(transaction, %Transaction{action: action, collections: %{read: [relationship]}, return: return_type})
   end
-  
+
   defp is_module(val) do
     Atom.to_string(val) =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/
   end
-  
+
   defp vertex_id(identifier) do
     case identifier do
       %{vertex: vertex} -> vertex._id
       _ -> identifier
     end
   end
-  
+
   defp parameterize(var, js, _) do
     case var do
       nil -> js
@@ -128,7 +128,7 @@ defmodule Xarango.Transaction do
         "var #{Atom.to_string(var)} = #{js}._id"
     end
   end
-        
+
   defp jsify(map) when is_map(map) do
     Xarango.Util.do_encode(map)
     |> Enum.reduce([], fn {key, value}, js ->
@@ -156,7 +156,7 @@ defmodule Xarango.Transaction do
     end
   end
   defp jsify(value), do: value
-  
+
   defp fnwrap(js, params\\[]) do
     wrap(js, "function(#{Enum.join(params, ",")}){", "}")
   end
@@ -174,7 +174,7 @@ defmodule Xarango.Transaction do
     |> put_in([:return], addition.return)
     |> to_transaction
   end
-  
+
   defp to_transaction(data) do
     struct(Transaction, data)
   end
@@ -202,5 +202,5 @@ defmodule Xarango.Transaction do
   defp to_result(data, return_type, _database) do
     struct(return_type, data)
   end
-  
+
 end

@@ -7,15 +7,15 @@ Xarango has a low level API that maps directly to the Arango REST API. On top of
 
 ## Usage
 
-Configure xarango in `config/confix.exs`:
+Configure xarango in `config/config.exs`:
 
-    config :xarango, db: [
+```elixir
+    config :xarango, :db,
       server: "http://localhost:8529",
       database: "test_db",
-      version: 30000,
       username: System.get_env("ARANGO_USER"),
       password: System.get_env("ARANGO_PASSWORD")
-    ]
+```
 
 Set your credentials:
 
@@ -25,7 +25,7 @@ Set your credentials:
 Run tests:
 
     mix test # <= beware: running tests will destroy all data in the configured database.
-    
+
 ## Documents
 
 ```elixir
@@ -54,7 +54,7 @@ defmodule Brand, do: use Xarango.Domain.Node
 defmodule Car, do: use Xarango.Domain.Node, graph: Vehicles, collection: :all_cars
 defmodule Vehicles do
   use Xarango.Domain.Graph
-  
+
   relationship Car, :made_by, Brand
 end
 
@@ -69,7 +69,7 @@ Vehicles.add_made_by(outback, subaru)
 Vehicles.add(impreza, :made_by, subaru)
 
 Vehicles.car_made_by(subaru) #=> [%Car{...}, %Car{...}] #outbound edges for car
-Vehicles.get(Car, :made_by, subaru) #=> [%Car{...}, %Car{...}] 
+Vehicles.get(Car, :made_by, subaru) #=> [%Car{...}, %Car{...}]
 
 Vehicles.made_by_brand(outback) #=> [%Brand{...}]
 Vehicles.get(outback, :made_by, Brand) #=> [%Brand{...}
@@ -131,4 +131,3 @@ The package can be installed as:
       [applications: [:xarango]]
     end
     ```
-
