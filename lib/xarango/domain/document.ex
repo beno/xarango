@@ -37,7 +37,7 @@ defmodule Xarango.Domain.Document do
       end
       def list(params) do
         SimpleQuery.by_example(%SimpleQuery{example: params, collection: _collection().name}, _database())
-        |> Enum.map(&struct(__MODULE__, doc: &1))
+        |> to_document
       end
       def replace(document, data) do
         %{ document.doc | _data: data }
@@ -55,20 +55,29 @@ defmodule Xarango.Domain.Document do
         document.doc
         |> Document.destroy(_database())
       end
-      def fetch(document, field) do
-        value = document.doc._data
-          |> Map.get(field)
-        {:ok, value}
-      end
-
-      defp to_document(data) do
-        struct(__MODULE__, doc: data)
-      end
+      
       def search(field, value) do
         %Xarango.Query{query: "FOR doc IN FULLTEXT(#{_collection().name}, \"#{field}\", \"prefix:#{value}\") RETURN doc", batchSize: 3}
         |> Xarango.Query.query(_database())
         |> Map.get(:result)
+        |> to_document
       end
+
+      def fetch(document, field) do
+        case field do
+          :id -> {:ok, document.doc._id}
+          "id" -> {:ok, document.doc._id}
+          value -> {:ok, get_in(document.doc._data, List.wrap(field))}
+        end
+      end
+
+      defp to_document(docs) when is_list(docs) do
+        docs |> Enum.map(&to_document(&1))
+      end
+      defp to_document(doc) do
+        struct(__MODULE__, doc: doc)
+      end
+      
     end
   end
 

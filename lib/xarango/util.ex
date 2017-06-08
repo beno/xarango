@@ -79,5 +79,76 @@ defmodule Xarango.Util do
   def do_error(msg) do
     raise Xarango.Error, message: msg
   end
+  
+  def to_json(items) when is_list(items) do
+    items
+    |> Enum.map(&to_resource(&1))
+    |> Poison.encode!
+  end
+  
+  def to_json(item) do
+    to_resource(item)
+    |> Poison.encode!
+  end
+  
+  def to_resource(resources) when is_list(resources) do
+    resources |> Enum.map(&to_resource(&1))
+  end
+  
+  def to_resource(%{vertex: vertex}) do
+    vertex |> to_resource
+  end
+  
+  def to_resource(%{doc: document}) do
+    document |> to_resource
+  end
 
+  def to_resource(%{_data: data, _id: id}) do
+    data
+    |> Map.merge(%{id: id})
+  end
+  
+  def to_javascript(value) do
+    jsify(value)
+  end
+  
+  defp jsify(map) when is_map(map) do
+    Xarango.Util.do_encode(map)
+    |> Enum.reduce([], fn {key, value}, js ->
+      js ++ ["#{key}: #{jsify(value)}"]
+    end)
+    |> Enum.intersperse(", ")
+    |> List.to_string
+    |> wrap("{", "}")
+  end
+  defp jsify(list) when is_list(list) do
+    list
+    |> Enum.reduce([], fn value, js ->
+      js ++ [jsify(value)]
+    end)
+    |> Enum.intersperse(", ")
+    |> List.to_string
+    |> wrap("[", "]")
+  end
+  defp jsify(value) when is_binary(value), do: wrap(value, "\"", "\"")
+  defp jsify(nil), do: "null"
+  defp jsify(value) when is_atom(value) do
+    cond do
+      is_module(value) -> Xarango.Util.name_from(value)
+      true -> Atom.to_string(value)
+    end
+  end
+  defp jsify(value), do: value
+  
+  
+  def wrap(nil, _, _), do: ""
+  def wrap("", _, _), do: ""
+  def wrap(js, left, right), do: left <> js <> right
+
+  def is_module(val) do
+    Atom.to_string(val) =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/
+  end
+
+
+  
 end

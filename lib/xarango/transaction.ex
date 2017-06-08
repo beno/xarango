@@ -6,6 +6,7 @@ defmodule Xarango.Transaction do
   alias Xarango.Transaction
   alias Xarango.Edge
   alias Xarango.Vertex
+  alias Xarango.Util
   use Xarango.URI, prefix: "transaction"
 
   def begin(), do: %Transaction{}
@@ -103,15 +104,11 @@ defmodule Xarango.Transaction do
   end
   def get(transaction, from, relationship, to)  when is_atom(to) do
     {edge, return_type} = cond do
-      is_module(to) -> {%Edge{_from: vertex_id(from)}, {to, :_to}}
-      is_module(from) -> {%Edge{_to: vertex_id(to)}, {from, :_from}}
+      Util.is_module(to) -> {%Edge{_from: vertex_id(from)}, {to, :_to}}
+      Util.is_module(from) -> {%Edge{_to: vertex_id(to)}, {from, :_from}}
     end
     action = "db.#{relationship}.byExample(#{jsify(edge)}).toArray()"
     merge(transaction, %Transaction{action: action, collections: %{read: [relationship]}, return: return_type})
-  end
-
-  defp is_module(val) do
-    Atom.to_string(val) =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/
   end
 
   defp vertex_id(identifier) do
@@ -129,41 +126,11 @@ defmodule Xarango.Transaction do
     end
   end
 
-  defp jsify(map) when is_map(map) do
-    Xarango.Util.do_encode(map)
-    |> Enum.reduce([], fn {key, value}, js ->
-      js ++ ["#{key}: #{jsify(value)}"]
-    end)
-    |> Enum.intersperse(", ")
-    |> List.to_string
-    |> wrap("{", "}")
-  end
-  defp jsify(list) when is_list(list) do
-    list
-    |> Enum.reduce([], fn value, js ->
-      js ++ [jsify(value)]
-    end)
-    |> Enum.intersperse(", ")
-    |> List.to_string
-    |> wrap("[", "]")
-  end
-  defp jsify(value) when is_binary(value), do: wrap(value, "\"", "\"")
-  defp jsify(nil), do: "null"
-  defp jsify(value) when is_atom(value) do
-    cond do
-      is_module(value) -> Xarango.Util.name_from(value)
-      true -> Atom.to_string(value)
-    end
-  end
-  defp jsify(value), do: value
+  def jsify(value), do: Util.to_javascript(value)
 
   defp fnwrap(js, params\\[]) do
-    wrap(js, "function(#{Enum.join(params, ",")}){", "}")
+    Util.wrap(js, "function(#{Enum.join(params, ",")}){", "}")
   end
-
-  defp wrap(nil, _, _), do: ""
-  defp wrap("", _, _), do: ""
-  defp wrap(js, left, right), do: left <> js <> right
 
   defp merge(transaction, addition) do
     Map.from_struct(transaction)
@@ -191,7 +158,7 @@ defmodule Xarango.Transaction do
   end
   defp to_result(data, {return_type, param}, database) do
     cond do
-      is_module(return_type) ->
+      Util.is_module(return_type) ->
         vertex = Vertex.vertex(%Vertex{_id: Map.get(data, param)}, database)
         to_result(%{vertex: vertex}, return_type, database)
       is_atom(return_type) ->
