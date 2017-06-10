@@ -73,16 +73,21 @@ defmodule Xarango.Query do
   end
   
   def paginate(query, nil), do: query
-  def paginate(query, page_length) do
-    %Xarango.Query{query | batchSize: page_length }
+  def paginate(query, page_length, page\\nil)
+  def paginate(query, page_length, nil) do
+    %Xarango.Query{query | batchSize: page_length, count: true }
   end
+  def paginate(query, page_length, page) do
+    %Xarango.Query{query | query: AQL.limit(query.query, page_length, page_length*(page-1)) }
+  end
+
   
   def build(collection, filter, options) do
     from(collection)
     |> filter(filter)
     |> sort(options[:sort])
     |> limit(options[:limit])
-    |> paginate(options[:per_page])
+    |> paginate(options[:per_page], options[:page])
   end
 
 end

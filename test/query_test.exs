@@ -30,6 +30,7 @@ defmodule QueryTest do
     |> Query.paginate(20)
     assert Xarango.AQL.to_aql(q.query) == "FOR r IN products FILTER r.foo == \"bar\" FILTER r.size == 4 FILTER r.age == 10 LIMIT 4 RETURN r"
     assert q.batchSize == 20
+    assert q.count == true
   end
 
   test "next" do
