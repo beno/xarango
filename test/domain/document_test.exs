@@ -41,27 +41,57 @@ defmodule DomainDocumentTest do
   test "get model list" do
     source = TestModel.create(%{jabba: "dabba"})
     TestModel.create(%{dabba: "doo"})
-    models = TestModel.list(%{jabba: "dabba"})
-    assert is_list(models)
-    assert length(models) == 1
-    assert Enum.at(models, 0).doc._data == source.doc._data
+    result = TestModel.list(%{jabba: "dabba"})
+    assert is_list(result.result)
+    assert length(result.result) == 1
+    assert Enum.at(result.result, 0).doc._data == source.doc._data
   end
   
   test "get model list with pagination" do
     1..10 |> Enum.each(fn idx -> TestModel.create(%{name: "#{idx}"}) end)
-    models = TestModel.list(%{}, [sort: :name, limit: 5])
-    assert is_list(models)
-    assert length(models) == 5
+    result = TestModel.list(%{}, [sort: :name, per_page: 2])
+    refute is_nil(result.id)
+    assert is_list(result.result)
+    assert length(result.result) == 2
   end
+  
+  test "get model next list with cursor" do
+    1..10 |> Enum.each(fn idx -> TestModel.create(%{name: "#{idx}"}) end)
+    result = TestModel.list(%{}, [sort: :name, per_page: 4])
+    refute is_nil(result.id)
+    assert is_list(result.result)
+    assert length(result.result) == 4
+    result2 = TestModel.list(%{}, [cursor: result.id])
+    assert result.id == result2.id
+    assert length(result2.result) == 4
+    result3 = TestModel.list(%{}, [cursor: result.id])
+    assert result3.id == nil
+    assert length(result3.result) == 2
+  end
+  
+  test "get model next list with pages" do
+    1..10 |> Enum.each(fn idx -> TestModel.create(%{name: "#{idx}"}) end)
+    result = TestModel.list(%{}, [sort: :name, per_page: 4, page: 1])
+#    refute is_nil(result.id)
+    assert is_list(result.result)
+    assert length(result.result) == 4
+    result2 = TestModel.list(%{}, [sort: :name, per_page: 4, page: 2])
+    assert result.id == result2.id
+    assert length(result2.result) == 4
+    result3 = TestModel.list(%{}, [sort: :name, per_page: 4, page: 3])
+    assert result3.id == nil
+    assert length(result3.result) == 2
+  end
+
 
 
   test "list models in db" do
     source = TestDbModel.create(%{jabba: "dabba"})
     TestDbModel.create(%{dabba: "doo"})
-    models = TestDbModel.list(%{jabba: "dabba"})
-    assert is_list(models)
-    assert length(models) == 1
-    assert Enum.at(models, 0).doc._data == source.doc._data
+    result = TestDbModel.list(%{jabba: "dabba"})
+    assert is_list(result.result)
+    assert length(result.result) == 1
+    assert Enum.at(result.result, 0).doc._data == source.doc._data
   end
 
 

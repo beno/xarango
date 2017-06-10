@@ -51,7 +51,7 @@ defmodule Xarango.Domain.Node do
         Node.create(data, collection, _graph(options), _database(options)) |> to_node
       end
       def one(params, options\\[]), do: Node.one(params, _collection(), _graph(options), _database(options)) |> to_node
-      def list(params, options\\[]), do: Node.list(params, options, _collection(), _graph(options), _database(options)) |> to_nodes
+      def list(params, options\\[]), do: Node.list(params, options, _collection(), _graph(options), _database(options)) |> to_node
       def replace(node, data, options\\[]), do: Node.replace(node, data, _collection(), _graph(options), _database(options)) |> to_node
       def update(node, data, options\\[]), do: Node.update(node, data, _collection(), _graph(options), _database(options)) |> to_node
       def destroy(node, options\\[]), do: Node.destroy(node, _collection(), _graph(options), _database(options))
@@ -62,13 +62,14 @@ defmodule Xarango.Domain.Node do
           value -> {:ok, get_in(node.vertex._data, List.wrap(field))}
         end
       end
-      defp to_node(vertex), do: struct(__MODULE__, vertex: vertex)
-      defp to_nodes(vertices), do: vertices |> Enum.map(&struct(__MODULE__, vertex: &1))
       def search(field, value) do
         %Xarango.Query{query: "FOR doc IN FULLTEXT(#{_collection().collection}, \"#{field}\", \"prefix:#{value}\") RETURN doc", batchSize: 3}
         |> Xarango.Query.query(_database([]))
         |> Map.get(:result)
       end
+      defp to_node(%Xarango.QueryResult{result: vertices} = result ), do: %Xarango.QueryResult{result | result: to_node(vertices) }
+      defp to_node(vertices) when is_list(vertices), do: Enum.map(vertices, &to_node(&1))
+      defp to_node(vertex), do: struct(__MODULE__, vertex: vertex)
     end
   end
 
@@ -89,9 +90,13 @@ defmodule Xarango.Domain.Node do
   end
 
   def list(params, options, collection, _graph, database) do
-    Query.build(%{name: collection.collection}, params, options)
-    |> Query.query(database)
-    |> Map.get(:result)
+    case options[:cursor] do
+      cursor when is_binary(cursor) ->
+        Query.next(%{hasMore: true, id: cursor}, database)
+      _ ->
+        Query.build(%{name: collection.collection}, params, options)
+        |> Query.query(database)
+    end
     |> to_vertex
   end
 
@@ -118,6 +123,9 @@ defmodule Xarango.Domain.Node do
   defp to_vertex(%Xarango.Document{}  = document) do
     doc = Map.from_struct(document)
     struct(Xarango.Vertex, doc)
+  end
+  defp to_vertex(%Xarango.QueryResult{} = result) do
+    %Xarango.QueryResult{result | result: to_vertex(result.result)}
   end
   defp to_vertex(document) do
     Xarango.Document.to_document(document) |> to_vertex

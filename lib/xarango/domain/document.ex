@@ -37,9 +37,13 @@ defmodule Xarango.Domain.Document do
         |> to_document
       end
       def list(params, options\\[]) do
-        Query.build(_collection(), params, options)
-        |> Query.query(_database())
-        |> Map.get(:result)
+        case options[:cursor] do
+          cursor when is_binary(cursor) ->
+            Query.next(%{hasMore: true, id: cursor}, _database())
+          _ ->
+            Query.build(_collection(), params, options)
+            |> Query.query(_database())
+        end
         |> to_document
       end
       def replace(document, data) do
@@ -76,6 +80,9 @@ defmodule Xarango.Domain.Document do
 
       defp to_document(docs) when is_list(docs) do
         docs |> Enum.map(&to_document(&1))
+      end
+      defp to_document(%Xarango.QueryResult{} = result) do
+        %Xarango.QueryResult{result | result: to_document(result.result)}
       end
       defp to_document(%Xarango.Document{} = doc) do
         struct(__MODULE__, doc: doc)

@@ -49,22 +49,36 @@ defmodule DomainNodeTest do
     assert model.vertex._data == %{jabba: "dabba"}
   end
 
-  test "get model list" do
+  test "get node list" do
     source = TestNode.create(%{jabba: "dabba"})
     TestNode.create(%{dabba: "doo"})
-    models = TestNode.list(%{jabba: "dabba"})
-    assert is_list(models)
-    assert length(models) == 1
-    assert Enum.at(models, 0).vertex._data == source.vertex._data
+    result = TestNode.list(%{jabba: "dabba"})
+    assert is_list(result.result)
+    assert length(result.result) == 1
+    assert Enum.at(result.result, 0).vertex._data == source.vertex._data
+  end
+  
+  test "get next list with cursor" do
+    1..10 |> Enum.each(fn idx -> TestNode.create(%{name: "#{idx}"}) end)
+    result = TestNode.list(%{}, [sort: :name, per_page: 4])
+    refute is_nil(result.id)
+    assert is_list(result.result)
+    assert length(result.result) == 4
+    result2 = TestNode.list(%{}, [cursor: result.id])
+    assert result.id == result2.id
+    assert length(result2.result) == 4
+    result3 = TestNode.list(%{}, [cursor: result.id])
+    assert result3.id == nil
+    assert length(result3.result) == 2
   end
 
   test "list nodes in db" do
     source = TestDbNode.create(%{jabba: "dabba"})
-    TestDbNode.create(%{dabba: "doo"})
-    models = TestDbNode.list(%{jabba: "dabba"})
-    assert is_list(models)
-    assert length(models) == 1
-    assert Enum.at(models, 0).vertex._data == source.vertex._data
+    TestDbNode.create(%{jabba: "doo"})
+    result = TestDbNode.list(%{jabba: "dabba"})
+    assert is_list(result.result)
+    assert length(result.result) == 1
+    assert Enum.at(result.result, 0).vertex._data == source.vertex._data
   end
 
   test "replace node" do
