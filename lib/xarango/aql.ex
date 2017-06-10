@@ -1,6 +1,6 @@
 defmodule Xarango.AQL do
 
-  defstruct [:collection, :filters, :sort, :limit]
+  defstruct [:collection, :filters, :sort, :limit, :skip]
 
   def from(collection) do
     %Xarango.AQL{collection: collection, filters: []}
@@ -15,8 +15,8 @@ defmodule Xarango.AQL do
     %Xarango.AQL{aql | sort: add_sort(aql, sort, dir) }
   end
 
-  def limit(aql, limit) do
-    %Xarango.AQL{aql | limit: add_limit(aql, limit) }
+  def limit(aql, limit, skip\\nil) do
+    %Xarango.AQL{aql | limit: add_limit(aql, limit, skip) }
   end
 
   def to_aql(aql) do
@@ -54,9 +54,14 @@ defmodule Xarango.AQL do
     ["SORT r.#{sort} #{dir}"]
   end
 
-  defp add_limit(_aql, limit) do
+  defp add_limit(_aql, limit, nil) do
     ["LIMIT #{limit}"]
   end
+  defp add_limit(_aql, limit, skip) do
+    ["LIMIT #{skip}, #{limit}"]
+  end
+
+  
   
   
 

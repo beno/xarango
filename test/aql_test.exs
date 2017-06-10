@@ -20,6 +20,15 @@ defmodule AQLTest do
     assert q == "FOR r IN products LIMIT 100 RETURN r"
   end
   
+  test "aql limit and skip" do
+    coll = %{name: "products"}
+    q = AQL.from(coll)
+    |> AQL.limit(50, 10)
+    |> AQL.to_aql
+    assert q == "FOR r IN products LIMIT 10, 50 RETURN r"
+  end
+
+  
   test "aql sort" do
     coll = %{name: "products"}
     q = AQL.from(coll)
