@@ -2,6 +2,7 @@ defmodule Xarango.Domain.Node do
 
   alias Xarango.Vertex
   alias Xarango.SimpleQuery
+  alias Xarango.Query
   alias Xarango.Index
   
   defmacro index(type, field) do
@@ -50,7 +51,7 @@ defmodule Xarango.Domain.Node do
         Node.create(data, collection, _graph(options), _database(options)) |> to_node
       end
       def one(params, options\\[]), do: Node.one(params, _collection(), _graph(options), _database(options)) |> to_node
-      def list(params, options\\[]), do: Node.list(params, _collection(), _graph(options), _database(options)) |> to_nodes
+      def list(params, options\\[]), do: Node.list(params, options, _collection(), _graph(options), _database(options)) |> to_nodes
       def replace(node, data, options\\[]), do: Node.replace(node, data, _collection(), _graph(options), _database(options)) |> to_node
       def update(node, data, options\\[]), do: Node.update(node, data, _collection(), _graph(options), _database(options)) |> to_node
       def destroy(node, options\\[]), do: Node.destroy(node, _collection(), _graph(options), _database(options))
@@ -87,9 +88,11 @@ defmodule Xarango.Domain.Node do
     end
   end
 
-  def list(params, collection, _graph, database) do
-    SimpleQuery.by_example(%SimpleQuery{example: params, collection: collection.collection}, database)
-    |> Enum.map(&to_vertex(&1))
+  def list(params, options, collection, _graph, database) do
+    Query.build(%{name: collection.collection}, params, options)
+    |> Query.query(database)
+    |> Map.get(:result)
+    |> to_vertex
   end
 
   def replace(node, data, collection, graph, database) do
@@ -109,8 +112,16 @@ defmodule Xarango.Domain.Node do
     |> Vertex.destroy(collection, graph, database)
   end
 
-  defp to_vertex(document) do
+  defp to_vertex(documents) when is_list(documents) do
+    Enum.map(documents, &to_vertex(&1))
+  end
+  defp to_vertex(%Xarango.Document{}  = document) do
     doc = Map.from_struct(document)
     struct(Xarango.Vertex, doc)
   end
+  defp to_vertex(document) do
+    Xarango.Document.to_document(document) |> to_vertex
+  end
+
+
 end

@@ -46,6 +46,14 @@ defmodule DomainDocumentTest do
     assert length(models) == 1
     assert Enum.at(models, 0).doc._data == source.doc._data
   end
+  
+  test "get model list with pagination" do
+    1..10 |> Enum.each(fn idx -> TestModel.create(%{name: "#{idx}"}) end)
+    models = TestModel.list(%{}, [sort: :name, limit: 5])
+    assert is_list(models)
+    assert length(models) == 5
+  end
+
 
   test "list models in db" do
     source = TestDbModel.create(%{jabba: "dabba"})

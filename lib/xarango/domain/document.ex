@@ -3,6 +3,7 @@ defmodule Xarango.Domain.Document do
   alias Xarango.Document
   alias Xarango.SimpleQuery
   alias Xarango.Index
+  alias Xarango.Query
   
   defmacro index(type, field) do
     quote do
@@ -35,8 +36,10 @@ defmodule Xarango.Domain.Document do
         SimpleQuery.first_example(%SimpleQuery{example: params, collection: _collection().name}, _database())
         |> to_document
       end
-      def list(params) do
-        SimpleQuery.by_example(%SimpleQuery{example: params, collection: _collection().name}, _database())
+      def list(params, options\\[]) do
+        Query.build(_collection(), params, options)
+        |> Query.query(_database())
+        |> Map.get(:result)
         |> to_document
       end
       def replace(document, data) do
@@ -74,9 +77,13 @@ defmodule Xarango.Domain.Document do
       defp to_document(docs) when is_list(docs) do
         docs |> Enum.map(&to_document(&1))
       end
-      defp to_document(doc) do
+      defp to_document(%Xarango.Document{} = doc) do
         struct(__MODULE__, doc: doc)
       end
+      defp to_document(doc) do
+        struct(__MODULE__, doc: Document.to_document(doc))
+      end
+
       
     end
   end
