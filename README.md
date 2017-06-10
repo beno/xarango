@@ -110,6 +110,8 @@ See tests for low level usage examples.
 
 - [x] Transactions
 - [x] Graph operations
+- [x] Full text search
+- [x] AQL support, query builder
 - [ ] Sync/Async
 
 ## Installation
@@ -120,7 +122,7 @@ The package can be installed as:
 
     ```elixir
     def deps do
-      [{:xarango, "~> 0.5.0"}]
+      [{:xarango, "~> 0.5.5"}]
     end
     ```
 
