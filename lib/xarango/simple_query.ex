@@ -32,7 +32,7 @@ defmodule Xarango.SimpleQuery do
     url("lookup-by-keys", database)
     |> put(query)
     |> Map.get(:documents)
-    |> Enum.map(&Document.to_document(&1))
+    |> Document.to_document
   end
 
   def random(query, database\\nil) do

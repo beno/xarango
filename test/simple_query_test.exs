@@ -24,6 +24,20 @@ defmodule SimpleQueryTest do
     docs = SimpleQuery.by_example(%SimpleQuery{collection: coll.name, example: example})
     assert length(docs) == 1
   end
+  
+  test "by example with pagination" do
+    coll = Xarango.Collection.create(collection_())
+    _documents(10, coll, ["a", "b", "a", "c", "a", "f", "g", "a", "a", "a"])
+    docs = SimpleQuery.by_example(%SimpleQuery{collection: coll.name, example: %{field: "a"}, skip: 4})
+    assert length(docs) == 2
+  end
+  
+  test "by example with limit" do
+    coll = Xarango.Collection.create(collection_())
+    _documents(10, coll, ["a", "b", "a", "c", "a", "f", "g", "a", "a", "a"])
+    docs = SimpleQuery.by_example(%SimpleQuery{collection: coll.name, example: %{field: "a"}, limit: 3})
+    assert length(docs) == 3
+  end
 
   test "first example" do
     {coll, docs} = _documents(3)
@@ -31,6 +45,8 @@ defmodule SimpleQueryTest do
     doc = SimpleQuery.first_example(%SimpleQuery{collection: coll.name, example: source._data})
     assert doc._data == source._data
   end
+  
+  
 
   test "find by keys" do
     {coll, docs} = _documents(3)
@@ -162,16 +178,16 @@ defmodule SimpleQueryTest do
   end
 
   defp _geo_documents(count, coll) do
-    Enum.map(1..count, fn _ -> 
+    Enum.map(1..count, fn _ ->
       %Document{ document_() | _data: %{lat: Faker.Address.latitude, lon: Faker.Address.longitude} }
-      |> Document.create(coll) 
+      |> Document.create(coll)
     end)
   end
 
   defp _geo1_documents(count, coll) do
-    Enum.map(1..count, fn _ -> 
+    Enum.map(1..count, fn _ ->
       %Document{ document_() | _data: %{lat: _num(), lon: _num()} }
-      |> Document.create(coll) 
+      |> Document.create(coll)
     end)
   end
 

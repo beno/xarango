@@ -9,7 +9,7 @@ defmodule Xarango.Document do
   def document(document, database\\nil) do
     url(document._id, database)
     |> get
-    |> to_document 
+    |> to_document
   end
 
   def documents(collection, database\\nil) do
@@ -95,10 +95,12 @@ defmodule Xarango.Document do
     |> to_document
   end
 
+  def to_document(docs) when is_list(docs) do
+    docs |> Enum.map(&to_document(&1))
+  end
   def to_document(doc) do
     struct(Document, decode_data(doc, Document))
   end
-
 
   defp docs_per_collection(documents) do
     documents
