@@ -10,6 +10,16 @@ defmodule UtilTest do
     end
   end
   
+  test "domain node to resource" do
+    source = UtilTestNode.create(%{jabba: "dabba"})
+    assert Util.to_resource(source) == %{id: source[:id], jabba: "dabba"}
+  end
+  
+  test "domain node to resource with encoded ID" do
+    source = UtilTestNode.create(%{jabba: "dabba"})
+    assert Util.to_resource(source, true) == %{id: URI.encode_www_form(source[:id]), jabba: "dabba"}
+  end
+  
   test "domain node to json" do
     source = UtilTestNode.create(%{jabba: "dabba"})
     assert Util.to_json(source) == "{\"jabba\":\"dabba\",\"id\":\"#{source[:id]}\"}"

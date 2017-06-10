@@ -91,21 +91,20 @@ defmodule Xarango.Util do
     |> Poison.encode!
   end
   
-  def to_resource(resources) when is_list(resources) do
-    resources |> Enum.map(&to_resource(&1))
+  def to_resource(resource, encode_id\\false)
+  def to_resource(resources, encode_id) when is_list(resources) do
+    resources |> Enum.map(&to_resource(&1, encode_id))
   end
-  
-  def to_resource(%{vertex: vertex}) do
-    vertex |> to_resource
+  def to_resource(%{vertex: vertex}, encode_id) do
+    vertex |> to_resource(encode_id)
   end
-  
-  def to_resource(%{doc: document}) do
-    document |> to_resource
+  def to_resource(%{doc: document}, encode_id) do
+    document |> to_resource(encode_id)
   end
-
-  def to_resource(%{_data: data, _id: id}) do
-    data
-    |> Map.merge(%{id: id})
+  def to_resource(%{_data: data, _id: id}, encode_id) do
+    id = encode_id && URI.encode_www_form(id) || id
+    %{id: id}
+    |> Map.merge(data || %{})
   end
   
   def to_javascript(value) do
@@ -148,7 +147,5 @@ defmodule Xarango.Util do
   def is_module(val) do
     Atom.to_string(val) =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/
   end
-
-
   
 end
