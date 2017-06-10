@@ -37,7 +37,7 @@ ipsum = Article.create(%{author: "Author", text: "Ipsum"})
 IO.inspect lorem[:text] #=> "Lorem"
 
 Article.one(%{author: "Author"}) #=> %Article{...}
-Article.list(%{author: "Author"}) #=> [%Article{...}, %Article{...}]
+Article.list(%{author: "Author"}) #=> %Xarango.QueryResult{result: [%Article{...}, %Article{...}]}
 
 Article.update(ipsum, %{status: "review"})
 Article.replace(lorem, %{author: "Author", text: "Foo"})
@@ -122,7 +122,7 @@ The package can be installed as:
 
     ```elixir
     def deps do
-      [{:xarango, "~> 0.5.5"}]
+      [{:xarango, "~> 0.5.6"}]
     end
     ```
 

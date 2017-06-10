@@ -4,7 +4,7 @@ defmodule Xarango.Mixfile do
   def project do
     [
      app: :xarango,
-     version: "0.5.5",
+     version: "0.5.6",
      elixir: "~> 1.4",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
