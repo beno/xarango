@@ -4,25 +4,14 @@ defmodule Xarango.Domain.Node do
   alias Xarango.SimpleQuery
   alias Xarango.Query
   alias Xarango.Index
-  
-  defmacro index(type, field) do
-    quote do
-      @indexes %Index{type: Atom.to_string(unquote(type)), fields: [Atom.to_string(unquote(field))]}
-      defp indexes, do: @indexes
-      defoverridable [indexes: 0]
-    end
-  end
-  
+    
   defmacro __using__(options\\[]) do
     graph = options[:graph]
     collection = options[:collection]
     quote do
       alias Xarango.Domain.Node
-      import Xarango.Domain.Node, only: [index: 2]
+      use Xarango.Index
       defstruct vertex: %Xarango.Vertex{}
-      Module.register_attribute __MODULE__, :indexes, accumulate: true
-      defp indexes, do: []
-      defoverridable [indexes: 0]
       defp _graph_module(options) do
         case options[:graph] || unquote(graph) do
           nil -> raise Xarango.Error, message: "graph not set for #{__MODULE__}"

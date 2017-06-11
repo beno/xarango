@@ -2,27 +2,16 @@ defmodule Xarango.Domain.Document do
 
   alias Xarango.Document
   alias Xarango.SimpleQuery
-  alias Xarango.Index
   alias Xarango.Query
-  
-  defmacro index(type, field) do
-    quote do
-      @indexes %Index{type: Atom.to_string(unquote(type)), fields: [Atom.to_string(unquote(field))]}
-      defp indexes, do: @indexes
-      defoverridable [indexes: 0]
-    end
-  end
-  
+  alias Xarango.Index
+    
   defmacro __using__(options) do
     db = options[:db] && Atom.to_string(options[:db]) || Xarango.Server.server.database
     coll = options[:collection] && Atom.to_string(options[:collection])
 
     quote do
-      import Xarango.Domain.Document
+      use Xarango.Index
       defstruct doc: %Xarango.Document{}
-      Module.register_attribute __MODULE__, :indexes, accumulate: true
-      defp indexes, do: @indexes
-      defoverridable [indexes: 0]
       def _database, do: %Xarango.Database{name: unquote(db)}
       defp _collection, do: %Xarango.Collection{name: unquote(coll) || Xarango.Util.name_from(__MODULE__)}
       def create(data, options\\[]) do
