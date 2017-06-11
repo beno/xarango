@@ -48,6 +48,17 @@ defmodule DomainGraphTest do
     assert length(alice_likes) == 2
     assert length(alice_liked_by) == 1
   end
+  
+  test "ensure relationships" do
+    TestGraph.ensure
+    alice = Person.create(%{name: "Alice"})
+    bob = Person.create(%{name: "Bob"})
+    TestGraph.ensure_likes(bob, alice)
+    TestGraph.ensure_likes(bob, alice)
+    alice_likes = TestGraph.person_likes(alice)
+    assert length(alice_likes) == 1
+  end
+
 
   test "list db relationships" do
     TestDbGraph.ensure
