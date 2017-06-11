@@ -3,7 +3,6 @@ defmodule Xarango.Domain.Document do
   alias Xarango.Document
   alias Xarango.SimpleQuery
   alias Xarango.Query
-  alias Xarango.Index
     
   defmacro __using__(options) do
     db = options[:db] && Atom.to_string(options[:db]) || Xarango.Server.server.database
@@ -11,6 +10,8 @@ defmodule Xarango.Domain.Document do
 
     quote do
       use Xarango.Index
+      use Xarango.Schema
+
       defstruct doc: %Xarango.Document{}
       def _database, do: %Xarango.Database{name: unquote(db)}
       defp _collection, do: %Xarango.Collection{name: unquote(coll) || Xarango.Util.name_from(__MODULE__)}

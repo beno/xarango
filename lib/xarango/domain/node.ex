@@ -9,8 +9,10 @@ defmodule Xarango.Domain.Node do
     graph = options[:graph]
     collection = options[:collection]
     quote do
-      alias Xarango.Domain.Node
       use Xarango.Index
+      use Xarango.Schema
+      alias Xarango.Domain.Node
+
       defstruct vertex: %Xarango.Vertex{}
       defp _graph_module(options) do
         case options[:graph] || unquote(graph) do
