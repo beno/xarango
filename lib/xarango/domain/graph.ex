@@ -9,6 +9,7 @@ defmodule Xarango.Domain.Graph do
   alias Xarango.EdgeCollection
   alias Xarango.SimpleQuery
   alias Xarango.Traversal
+  alias Xarango.Util
 
   defmacro __using__(options\\[]) do
     db = options[:db] && Atom.to_string(options[:db]) || Xarango.Server.server.database
@@ -41,8 +42,8 @@ defmodule Xarango.Domain.Graph do
     {relationship, from, to} = {Atom.to_string(relationship), Macro.expand(from, __CALLER__), Macro.expand(to, __CALLER__)}
     add_method = "add_#{relationship}" |> String.to_atom
     remove_method = "remove_#{relationship}" |> String.to_atom
-    outbound_method = "#{relationship}_#{Xarango.Util.short_name_from(to)}" |> String.to_atom
-    inbound_method = "#{Xarango.Util.short_name_from(from)}_#{relationship}" |> String.to_atom
+    inbound_method = "#{relationship}_#{Util.short_name_from(to)}" |> String.to_atom
+    outbound_method = "#{Util.short_name_from(from)}_#{relationship}" |> String.to_atom
     quote do
       @relationships %{from: unquote(from), to: unquote(to), name: unquote(relationship)}
       defp _relationships, do: @relationships
@@ -50,8 +51,8 @@ defmodule Xarango.Domain.Graph do
       def unquote(add_method)(%unquote(from){} = from, %unquote(to){} = to), do: add(from, unquote(relationship), to, nil)
       def unquote(add_method)(%unquote(from){} = from, %unquote(to){} = to, data), do:  add(from, unquote(relationship), to, data)
       def unquote(remove_method)(%unquote(from){} = from, %unquote(to){} = to), do: remove(from, unquote(relationship), to)
-      def unquote(outbound_method)(%unquote(from){} = from), do: get(from, unquote(relationship), unquote(to))
-      def unquote(inbound_method)(%unquote(to){} = to), do: get(unquote(from), unquote(relationship), to)
+      def unquote(inbound_method)(%unquote(from){} = from), do: get(from, unquote(relationship), unquote(to))
+      def unquote(outbound_method)(%unquote(to){} = to), do: get(unquote(from), unquote(relationship), to)
     end
   end
 
