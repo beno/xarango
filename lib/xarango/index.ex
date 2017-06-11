@@ -15,7 +15,7 @@ defmodule Xarango.Index do
     end
   end
 
-  defmacro __using__(options\\[]) do
+  defmacro __using__(_options\\[]) do
     quote do
       Module.register_attribute __MODULE__, :indexes, accumulate: true
       defp indexes, do: @indexes

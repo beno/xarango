@@ -9,7 +9,7 @@ defmodule Xarango.Schema do
     end
   end
   
-  defmacro __using__(options\\[]) do
+  defmacro __using__(_options\\[]) do
     quote do
       Module.register_attribute __MODULE__, :schema, []
       import Xarango.Schema, only: [schema: 1]

@@ -3,7 +3,6 @@ defmodule Xarango.Domain.Node do
   alias Xarango.Vertex
   alias Xarango.SimpleQuery
   alias Xarango.Query
-  alias Xarango.Index
     
   defmacro __using__(options\\[]) do
     graph = options[:graph]
