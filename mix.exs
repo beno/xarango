@@ -5,7 +5,7 @@ defmodule Xarango.Mixfile do
     [
      app: :xarango,
      version: "0.5.6",
-     elixir: "~> 1.4",
+     elixir: "~> 1.3",
      build_embedded: Mix.env == :prod,
      start_permanent: Mix.env == :prod,
      deps: deps(),
@@ -36,10 +36,10 @@ defmodule Xarango.Mixfile do
 
   defp deps do
     [
-      {:httpoison, "> 0.0.0"},
-      {:poison, "> 0.0.0"},
-      {:faker, "> 0.0.0", only: :test},
-      {:ex_doc, ">= 0.0.0", only: :dev}
+      {:httpoison, "~> 0.9.0"},
+      {:poison, "~> 3.1.0"},
+      {:faker, "~> 0.8.0", only: :test},
+      {:ex_doc, ">= 0.14.3", only: :dev}
     ]
   end
 end
