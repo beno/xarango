@@ -26,6 +26,30 @@ defmodule Xarango.TraversalResult do
     struct(Xarango.TraversalResult, result)
   end
 
+  def vertices_to(result), do: vertices(result, :to)
+  def vertices_from(result), do: vertices(result, :from)
+  def vertices(result, dir) do
+    result.paths
+   |> Enum.reduce([], fn path, vertices ->
+      case path.edges do
+        [] -> vertices
+        _ -> vertices ++ target_vertices(path, dir)
+      end
+    end)
+  end
+
+  defp target_vertices(path, dir) do
+    case dir do
+      :to -> Enum.map(path.edges, fn %{_to: vertex_id} -> find_vertex(vertex_id, path) end )
+      :from -> Enum.map(path.edges, fn %{_from: vertex_id} -> find_vertex(vertex_id, path) end )
+    end
+  end
+
+  defp find_vertex(id, path) do
+    path.vertices
+    |> Enum.find(fn vertex -> vertex._id == id end)
+  end
+
 end
 
 defmodule Xarango.Path do

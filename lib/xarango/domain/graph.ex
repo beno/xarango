@@ -32,7 +32,7 @@ defmodule Xarango.Domain.Graph do
       def add(from, relationship, to, data\\nil), do: add(from, relationship, to, data, _graph(), _database())
       def ensure(from, relationship, to, data\\nil), do: ensure(from, relationship, to, data, _graph(), _database())
       def remove(from, relationship, to), do: remove(from, relationship, to, _graph(), _database())
-      def get(from, relationship, to), do: get(from, relationship, to, _database())
+      def get(from, relationship, to), do: get(from, relationship, to, _graph(), _database())
       def traverse(start, options\\[]), do: traverse(start, options, _graph(), _database())
       @before_compile Xarango.Domain.Graph
     end
@@ -45,7 +45,7 @@ defmodule Xarango.Domain.Graph do
       unless Enum.member?(@relationships, relationship), do: @relationships relationship
     end
   end
-  
+
   defmacro __before_compile__(env) do
     relationships = Module.get_attribute(env.module, :relationships)
     methods = Enum.map relationships, fn %{from: from, to: to, name: relationship} ->
@@ -65,7 +65,7 @@ defmodule Xarango.Domain.Graph do
       end
     end
     quote do
-      def _relationships, do: @relationships
+      defp _relationships, do: @relationships
       unquote(methods)
     end
   end
@@ -82,12 +82,12 @@ defmodule Xarango.Domain.Graph do
   end
 
   def ensure(from, relationship, to, data, graph, database) do
-    case get(from, relationship, to, database) do
+    case get(from, relationship, to, graph, database) do
       [] -> add(from, relationship, to, data, graph, database)
       [edge] -> edge
     end
   end
-  
+
   def remove(from_node, relationship, to_node, graph, database) when is_atom(relationship) do
     remove(from_node, Atom.to_string(relationship), to_node, graph, database)
   end
@@ -99,35 +99,27 @@ defmodule Xarango.Domain.Graph do
     |> Enum.map(&Edge.destroy(&1, edge_collection, graph, database))
   end
 
-  def get(from, relationship, to, database) when is_atom(relationship) do
-    get(from, Atom.to_string(relationship), to, database)
+  def get(from, relationship, to, graph, database) when is_atom(relationship) do
+    get(from, Atom.to_string(relationship), to, graph, database)
   end
-  def get(%{} = from_node, relationship, to, database) when is_binary(relationship) do
-    edge_collection = %EdgeCollection{collection: relationship }
-    Vertex.edges(from_node.vertex, edge_collection, [direction: "out"], database)
-    |> Enum.map(fn edge ->
-      vertex = Vertex.vertex(%Vertex{_id: edge._to}, database)
-      struct(to, %{vertex: vertex})
-    end)
+  def get(%{} = from_node, relationship, _to, graph, database) when is_binary(relationship) do
+    traverse(from_node, [edgeCollection: relationship, direction: "outbound"], graph, database)
+    |> Xarango.TraversalResult.vertices_to
   end
-  def get(from, relationship, %{} = to_node, database) when is_binary(relationship) do
-    edge_collection = %EdgeCollection{collection: relationship }
-    Vertex.edges(to_node.vertex, edge_collection, [direction: "in"], database)
-    |> Enum.map(fn edge ->
-      vertex = Vertex.vertex(%Vertex{_id: edge._from}, database)
-      struct(from, %{vertex: vertex})
-    end)
+  def get(_from, relationship, %{} = to_node, graph, database) when is_binary(relationship) do
+    traverse(to_node, [edgeCollection: relationship, direction: "inbound"], graph, database)
+    |> Xarango.TraversalResult.vertices_from
   end
 
   def traverse(start, options, graph, database) do
     traversal = options
       |> Enum.into(%{})
+      |> Map.merge(%{direction: "outbound"}, fn _k, v1, _v2 -> v1 end)
       |> Map.merge(%{startVertex: start.vertex._id})
       |> Map.merge(%{graphName: graph.name})
-      |> Map.merge(%{direction: "outbound"})
+      |> Map.merge(%{uniqueness: %{vertices: "global", edges: "global"}})
     struct(Traversal, traversal)
     |> Traversal.traverse(database)
-
   end
 
   def ensure_collections(rel, graph, database) do
