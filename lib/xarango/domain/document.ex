@@ -3,7 +3,7 @@ defmodule Xarango.Domain.Document do
   alias Xarango.Document
   alias Xarango.SimpleQuery
   alias Xarango.Query
-    
+
   defmacro __using__(options) do
     db = options[:db] && Atom.to_string(options[:db]) || Xarango.Server.server.database
     coll = options[:collection] && Atom.to_string(options[:collection])
@@ -16,10 +16,10 @@ defmodule Xarango.Domain.Document do
       def _database, do: %Xarango.Database{name: unquote(db)}
       defp _collection, do: %Xarango.Collection{name: unquote(coll) || Xarango.Util.name_from(__MODULE__)}
       def create(data, options\\[]) do
+        options = Keyword.put(options, :returnNew, true)
         Xarango.Database.ensure(_database())
         Xarango.Collection.ensure(_collection(), _database(), indexes())
-        Document.create(%Document{_data: data}, _collection(), _database())
-        |> Document.document(_database())
+        Document.create(%Document{_data: data}, _collection(), _database(), options)
         |> to_document
       end
       def one(params) do
@@ -52,7 +52,7 @@ defmodule Xarango.Domain.Document do
         document.doc
         |> Document.destroy(_database())
       end
-      
+
       def search(field, value) do
         %Xarango.Query{query: "FOR doc IN FULLTEXT(#{_collection().name}, \"#{field}\", \"prefix:#{value}\") RETURN doc", batchSize: 3}
         |> Xarango.Query.query(_database())
@@ -81,7 +81,7 @@ defmodule Xarango.Domain.Document do
         struct(__MODULE__, doc: Document.to_document(doc))
       end
 
-      
+
     end
   end
 

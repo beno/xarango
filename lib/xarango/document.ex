@@ -29,7 +29,7 @@ defmodule Xarango.Document do
     url(collection.name, database, options)
     |> post(document)
     |> case do
-      %{new: new_doc} -> new_doc
+      %{new: doc} -> doc
       doc -> doc
     end
     |> to_document
