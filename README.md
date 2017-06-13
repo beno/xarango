@@ -112,7 +112,7 @@ See tests for low level usage examples.
 - [x] Graph operations
 - [x] Full text search
 - [x] AQL support, query builder
-- [ ] Sync/Async
+- [ ] waitForSync option
 
 ## Installation
 
