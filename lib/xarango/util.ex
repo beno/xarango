@@ -79,18 +79,18 @@ defmodule Xarango.Util do
   def do_error(msg) do
     raise Xarango.Error, message: msg
   end
-  
+
   def to_json(items) when is_list(items) do
     items
     |> Enum.map(&to_resource(&1))
     |> Poison.encode!
   end
-  
+
   def to_json(item) do
     to_resource(item)
     |> Poison.encode!
   end
-  
+
   def to_resource(resource, encode_id\\false)
   def to_resource(resources, encode_id) when is_list(resources) do
     resources |> Enum.map(&to_resource(&1, encode_id))
@@ -102,15 +102,22 @@ defmodule Xarango.Util do
     document |> to_resource(encode_id)
   end
   def to_resource(%{_data: data, _id: id}, encode_id) do
-    id = encode_id && URI.encode_www_form(id) || id
+    id = encode_id && form_encode(id) || id
     %{id: id}
     |> Map.merge(data || %{})
   end
-  
+
+  def form_encode(value) do
+    case value do
+      nil -> nil
+      value -> URI.encode_www_form(value)
+    end
+  end
+
   def to_javascript(value) do
     jsify(value)
   end
-  
+
   defp jsify(map) when is_map(map) do
     Xarango.Util.do_encode(map)
     |> Enum.reduce([], fn {key, value}, js ->
@@ -138,8 +145,8 @@ defmodule Xarango.Util do
     end
   end
   defp jsify(value), do: value
-  
-  
+
+
   def wrap(nil, _, _), do: ""
   def wrap("", _, _), do: ""
   def wrap(js, left, right), do: left <> js <> right
@@ -147,5 +154,5 @@ defmodule Xarango.Util do
   def is_module(val) do
     Atom.to_string(val) =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/
   end
-  
+
 end
