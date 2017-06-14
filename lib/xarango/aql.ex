@@ -11,7 +11,7 @@ defmodule Xarango.AQL do
   end
   defdelegate where(aql, filters), to: __MODULE__, as: :filter
 
-  def sort(aql, sort, dir\\:desc) do
+  def sort(aql, sort, dir\\:asc) do
     %Xarango.AQL{aql | sort: add_sort(aql, sort, dir) }
   end
 
@@ -27,12 +27,12 @@ defmodule Xarango.AQL do
     |> Kernel.++(["RETURN r"])
     |> Enum.join(" ")
   end
-  
+
   defp add_to_query(query, nil), do: query
   defp add_to_query(query, items) do
     query ++ items
   end
-  
+
   defp add_filters(aql, filters) do
     filters
     |> Enum.reduce(aql.filters, fn {key, value}, f -> f ++ [to_filter(key, value)] end)
@@ -61,9 +61,9 @@ defmodule Xarango.AQL do
     ["LIMIT #{skip}, #{limit}"]
   end
 
-  
-  
-  
+
+
+
 
 
 
