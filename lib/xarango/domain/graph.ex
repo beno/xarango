@@ -102,6 +102,11 @@ defmodule Xarango.Domain.Graph do
   def get(from, relationship, to, graph, database) when is_atom(relationship) do
     get(from, Atom.to_string(relationship), to, graph, database)
   end
+  def get(%{} = from_node, relationship, %{} = to_node, _graph, database) when is_binary(relationship) do
+    edge_collection = %EdgeCollection{collection: relationship }
+    %SimpleQuery{example: %{_from: from_node[:id], _to: to_node[:id]}, collection: edge_collection.collection}
+    |> SimpleQuery.by_example(database)
+  end
   def get(%{} = from_node, relationship, to, graph, database) when is_binary(relationship) do
     traverse(from_node, [edgeCollection: relationship, direction: "outbound"], graph, database)
     |> Xarango.TraversalResult.vertices_to |> to.to_node
