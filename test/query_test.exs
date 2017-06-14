@@ -20,7 +20,7 @@ defmodule QueryTest do
     assert result.error == false
     assert length(result.result) == length
   end
-  
+
   test "query builder" do
     coll = %{name: "products"}
     q = Query.from(coll)
@@ -50,13 +50,13 @@ defmodule QueryTest do
     explanation = Query.explain(%Query{query: q})
     assert explanation.error == false
   end
-  
+
   test "build" do
     collection = %{name: "things"}
     filter = [name: "foo"]
     options = [per_page: 20, sort: :name]
     q = Query.build(collection, filter, options)
-    assert Xarango.AQL.to_aql(q.query) == "FOR r IN things FILTER r.name == \"foo\" SORT r.name DESC RETURN r"
+    assert Xarango.AQL.to_aql(q.query) == "FOR r IN things FILTER r.name == \"foo\" SORT r.name ASC RETURN r"
     assert q.batchSize == 20
   end
 
