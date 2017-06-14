@@ -36,8 +36,13 @@ ipsum = Article.create(%{author: "Author", text: "Ipsum"})
 
 IO.inspect lorem[:text] #=> "Lorem"
 
+
 Article.one(%{author: "Author"}) #=> %Article{...}
 Article.list(%{author: "Author"}) #=> %Xarango.QueryResult{result: [%Article{...}, %Article{...}]}
+Article.list(%{}, [sort: :author, per_page: 10] #=> serial pagination with cursor (fast)
+Article.list(%{}, [sort: :author, dir: :desc, per_page: 10, page: 1] #=> pagination with page nrs (skip, limit)
+
+Article.search(:text, "ips"}) #=> [%Article{..}]
 
 Article.update(ipsum, %{status: "review"})
 Article.replace(lorem, %{author: "Author", text: "Foo"})
@@ -76,6 +81,9 @@ Vehicles.get(outback, :made_by, Brand) #=> [%Brand{...}
 
 Vehicles.remove_made_by(impreza, subaru)
 Vehicles.remove(outback, :made_by, subaru)
+
+Car.search(:name, "imp") #=> [%Car{...}]
+
 
 ```
 
@@ -122,7 +130,7 @@ The package can be installed as:
 
     ```elixir
     def deps do
-      [{:xarango, "~> 0.5.6"}]
+      [{:xarango, "~> 0.5.7"}]
     end
     ```
 
