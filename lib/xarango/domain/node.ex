@@ -57,9 +57,9 @@ defmodule Xarango.Domain.Node do
         |> Xarango.Query.query(_database([]))
         |> Map.get(:result)
       end
-      defp to_node(%Xarango.QueryResult{result: vertices} = result ), do: %Xarango.QueryResult{result | result: to_node(vertices) }
-      defp to_node(vertices) when is_list(vertices), do: Enum.map(vertices, &to_node(&1))
-      defp to_node(vertex), do: struct(__MODULE__, vertex: vertex)
+      def to_node(%Xarango.QueryResult{result: vertices} = result ), do: %Xarango.QueryResult{result | result: to_node(vertices) }
+      def to_node(vertices) when is_list(vertices), do: Enum.map(vertices, &to_node(&1))
+      def to_node(vertex), do: struct(__MODULE__, vertex: vertex)
     end
   end
 

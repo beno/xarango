@@ -102,13 +102,13 @@ defmodule Xarango.Domain.Graph do
   def get(from, relationship, to, graph, database) when is_atom(relationship) do
     get(from, Atom.to_string(relationship), to, graph, database)
   end
-  def get(%{} = from_node, relationship, _to, graph, database) when is_binary(relationship) do
+  def get(%{} = from_node, relationship, to, graph, database) when is_binary(relationship) do
     traverse(from_node, [edgeCollection: relationship, direction: "outbound"], graph, database)
-    |> Xarango.TraversalResult.vertices_to
+    |> Xarango.TraversalResult.vertices_to |> to.to_node
   end
-  def get(_from, relationship, %{} = to_node, graph, database) when is_binary(relationship) do
+  def get(from, relationship, %{} = to_node, graph, database) when is_binary(relationship) do
     traverse(to_node, [edgeCollection: relationship, direction: "inbound"], graph, database)
-    |> Xarango.TraversalResult.vertices_from
+    |> Xarango.TraversalResult.vertices_from |> from.to_node
   end
 
   def traverse(start, options, graph, database) do
