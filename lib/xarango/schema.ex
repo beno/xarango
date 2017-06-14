@@ -1,5 +1,5 @@
 defmodule Xarango.Schema do
-  
+
   defmacro schema(fields) do
     quote do
       @schema unquote(fields)
@@ -8,7 +8,7 @@ defmodule Xarango.Schema do
       def keys_as_string, do: Enum.map(keys(), fn key -> Atom.to_string(key) end)
     end
   end
-  
+
   defmacro __using__(_options\\[]) do
     quote do
       Module.register_attribute __MODULE__, :schema, []
@@ -16,5 +16,11 @@ defmodule Xarango.Schema do
     end
   end
 
-  
+
+end
+
+defmodule Xarango.Schema.Field do
+
+  defstruct [:type, :required, :format, :unique, :range]
+
 end
