@@ -10,6 +10,7 @@ defmodule Xarango.Domain.Graph do
   alias Xarango.SimpleQuery
   alias Xarango.Traversal
   alias Xarango.Util
+  alias Xarango.AQL
 
   defmacro __using__(options\\[]) do
     db = options[:db] && Atom.to_string(options[:db]) || Xarango.Server.server.database
@@ -20,7 +21,7 @@ defmodule Xarango.Domain.Graph do
       defstruct graph: %Xarango.Graph{}
       Module.register_attribute __MODULE__, :relationships, accumulate: true
       def _database, do: %Database{name: unquote(db)}
-      defp _graph, do: %Graph{name: unquote(gr) || Xarango.Util.name_from(__MODULE__) }
+      def _graph, do: %Graph{name: unquote(gr) || Xarango.Util.name_from(__MODULE__) }
       def create, do: ensure()
       def ensure do
         Database.ensure(_database())
@@ -34,6 +35,7 @@ defmodule Xarango.Domain.Graph do
       def remove(from, relationship, to), do: remove(from, relationship, to, _graph(), _database())
       def get(from, relationship, to), do: get(from, relationship, to, _graph(), _database())
       def traverse(start, options\\[]), do: traverse(start, options, _graph(), _database())
+      def ensure_relationships(start_node, end_nodes), do: ensure_relationships(start_node, end_nodes, _relationships(), _graph(), _database())
       @before_compile Xarango.Domain.Graph
     end
   end
@@ -65,7 +67,7 @@ defmodule Xarango.Domain.Graph do
       end
     end
     quote do
-      defp _relationships, do: @relationships
+      def _relationships, do: @relationships
       unquote(methods)
     end
   end
@@ -102,19 +104,29 @@ defmodule Xarango.Domain.Graph do
   def get(from, relationship, to, graph, database) when is_atom(relationship) do
     get(from, Atom.to_string(relationship), to, graph, database)
   end
-  def get(%{} = from_node, relationship, %{} = to_node, _graph, database) when is_binary(relationship) do
-    edge_collection = %EdgeCollection{collection: relationship }
-    %SimpleQuery{example: %{_from: from_node[:id], _to: to_node[:id]}, collection: edge_collection.collection}
-    |> SimpleQuery.by_example(database)
-  end
-  def get(%{} = from_node, relationship, to, graph, database) when is_binary(relationship) do
-    traverse(from_node, [edgeCollection: relationship, direction: "outbound"], graph, database)
-    |> Xarango.TraversalResult.vertices_to |> to.to_node
+  def get(%{} = from_node, relationship, %{} = to_node, graph, database) when is_binary(relationship) do
+    AQL.outbound(from_node, relationship, to_node) |> edge_query(graph, database)
   end
   def get(from, relationship, %{} = to_node, graph, database) when is_binary(relationship) do
-    traverse(to_node, [edgeCollection: relationship, direction: "inbound"], graph, database)
-    |> Xarango.TraversalResult.vertices_from |> from.to_node
+    AQL.inbound(to_node, relationship) |> vertex_query(from, graph, database)
   end
+  def get(%{} = from_node, relationship, to, graph, database) when is_binary(relationship) do
+    AQL.outbound(from_node, relationship) |> vertex_query(to, graph, database)
+  end
+
+  defp vertex_query(aql, node, _graph, database) do
+    aql
+    |> AQL.options([bfs: true, uniqueVertices: "global"])
+    |> Xarango.Query.query(database)
+    |> Xarango.QueryResult.to_vertex
+    |> node.to_node
+  end
+  defp edge_query(aql, _graph, database) do
+    aql
+    |> Xarango.Query.query(database)
+    |> Xarango.QueryResult.to_edge
+  end
+
 
   def traverse(start, options, graph, database) do
     traversal = options
@@ -128,10 +140,35 @@ defmodule Xarango.Domain.Graph do
   end
 
   def ensure_collections(rel, graph, database) do
-    {collection, from, to} = {rel[:name], apply(rel[:from], :_collection, []), apply(rel[:to], :_collection, [])}
-    from |> VertexCollection.ensure(graph, database)
-    to |> VertexCollection.ensure(graph, database)
+    {collection, from, to} = {rel[:name], rel[:from]._collection, rel[:to]._collection}
+    from_indexes = rel[:from].indexes
+    to_indexes = rel[:to].indexes
+    from |> VertexCollection.ensure(graph, database, from_indexes)
+    to |> VertexCollection.ensure(graph, database, to_indexes)
     %EdgeDefinition{collection: collection , from: [from.collection], to: [to.collection]} |> EdgeDefinition.ensure(graph, database)
+  end
+
+  def ensure_relationships(%{} = start_node, end_nodes, relationships, graph, database) do
+    stringified_end_nodes = Util.stringify_keys(end_nodes)
+    relationships
+    |> Enum.each(fn %{name: name} = relationship ->
+      case stringified_end_nodes[name] do
+        nil -> :noop
+        end_nodes -> ensure_directed(start_node, relationship, end_nodes, nil, graph, database)
+      end
+    end)
+    end_nodes
+  end
+
+  defp ensure_directed(start_node, relationship, end_nodes, data, graph, database) when is_list(end_nodes) do
+    end_nodes |> Enum.each(&ensure_directed(start_node, relationship, &1, data, graph, database))
+  end
+  defp ensure_directed(start_node, %{from: from, name: name, to: to}, end_node, data, graph, database) do
+    case {start_node.__struct__, end_node.__struct__} do
+      {^from, ^to} -> ensure(start_node, name, end_node, data, graph, database)
+      {^to, ^from} -> ensure(end_node, name, start_node, data, graph, database)
+      _ -> :noop
+    end
   end
 
 end
