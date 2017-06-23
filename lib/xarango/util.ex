@@ -91,26 +91,61 @@ defmodule Xarango.Util do
     |> Poison.encode!
   end
 
-  def to_resource(resource, encode_id\\false)
-  def to_resource(resources, encode_id) when is_list(resources) do
-    resources |> Enum.map(&to_resource(&1, encode_id))
+  def to_resource(resource, options\\[])
+  def to_resource(resources, options) when is_list(resources) do
+    resources |> Enum.map(&to_resource(&1, options))
   end
-  def to_resource(%{vertex: vertex}, encode_id) do
-    vertex |> to_resource(encode_id)
+  def to_resource(%{vertex: vertex} = node, options) do
+    vertex |> to_resource(options) |> add_resource_relationships(node, options)
   end
-  def to_resource(%{doc: document}, encode_id) do
-    document |> to_resource(encode_id)
+  def to_resource(%{doc: document}, options) do
+    document |> to_resource(options)
   end
-  def to_resource(%{_data: data, _id: id}, encode_id) do
-    id = encode_id && form_encode(id) || id
+  def to_resource(%{_data: data, _id: id}, options) do
+    id = options[:encode_id] == true && form_encode(id) || id
     %{id: id}
     |> Map.merge(data || %{})
   end
+  defp add_resource_relationships(resource, node, options) do
+    case node[:id] do
+      nil -> resource
+      node_id ->
+        relationships = get_edges(node)
+        |> Enum.reduce(%{}, fn edge, edges ->
+          relationship = Xarango.Edge.collection(edge).collection |> String.to_atom
+          case edge do
+            %{_from: ^node_id, _to: to} -> add_resource_relationship(edges, relationship, to, options)
+            %{_from: from, _to: ^node_id} -> add_resource_relationship(edges, relationship, from, options)
+            _ -> edges
+          end
+        end)
+        Map.merge(resource, relationships)
+    end
+  end
+  defp get_edges(node) do
+    %Xarango.Traversal{startVertex: node[:id],
+                       graphName: node.__struct__._graph([]).name,
+                       uniqueness: %{edges: "path", vertices: "path"},
+                       direction: "any"}
+    |> Xarango.Traversal.traverse
+    |> Xarango.TraversalResult.edges
+  end
+  defp add_resource_relationship(edges, relationship, target_id, options) do
+    target_id = case options[:encode_id] do
+      true -> form_encode(target_id)
+      _ -> target_id
+    end
+    case edges[relationship] do
+      nil -> Map.put(edges, relationship, target_id)
+      id when is_binary(id) -> Map.put(edges, relationship, [id, target_id] )
+      ids when is_list(ids) -> Map.put(edges, relationship, ids ++ [target_id])
+    end
+  end
 
-  def form_encode(value) do
-    case value do
+  defp form_encode(id) do
+    case id do
       nil -> nil
-      value -> URI.encode_www_form(value)
+      id -> URI.encode_www_form(id)
     end
   end
 
@@ -154,5 +189,26 @@ defmodule Xarango.Util do
   def is_module(val) do
     Atom.to_string(val) =~ ~r/^[A-Z]\w*(\.[A-Z]\w*)*$/
   end
+
+  def stringify_keys(nil), do: nil
+  def stringify_keys(map = %{}) do
+    map
+    |> Enum.map(fn {k, v} -> {stringify(k), v} end)
+    |> Enum.into(%{})
+  end
+  def stringify_keys([head | rest]) do
+    [stringify_keys(head) | stringify_keys(rest)]
+  end
+  def stringify_keys(not_a_map) do
+    not_a_map
+  end
+  defp stringify(value) when is_atom(value) do
+    Atom.to_string(value)
+  end
+  defp stringify(value) do
+    value
+  end
+
+
 
 end
