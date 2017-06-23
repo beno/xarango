@@ -62,9 +62,40 @@ defmodule Xarango.Vertex do
     end
   end
 
+  def to_vertex(vertices) when is_list(vertices) do
+    Enum.map(vertices, &to_vertex(&1))
+  end
+
   def to_vertex(data) do
     data = Map.get(data, :vertex, data)
     struct(Vertex, decode_data(data, Vertex))
+  end
+
+end
+
+defmodule Xarango.VertexCollection do
+
+  defstruct [:collection]
+
+  def vertices(collection, database\\nil) do
+    Xarango.Document.documents(%{name: collection.collection}, database)
+    |> Enum.map(&to_vertex(&1))
+  end
+
+  def ensure(collection, graph, database\\nil, indexes\\[]) do
+    collections = Xarango.Graph.vertex_collections(graph, database) |> Enum.map(&(&1.collection)) |> MapSet.new
+    case MapSet.member?(collections, collection.collection) do
+      false ->
+        Xarango.Graph.add_vertex_collection(graph, collection, database)
+        Enum.each(indexes, &Xarango.Index.create(&1, collection.collection, database))
+        collection
+      true -> collection
+    end
+  end
+
+  defp to_vertex(document) do
+    doc = Map.from_struct(document)
+    struct(Xarango.Vertex, doc)
   end
 
 end
