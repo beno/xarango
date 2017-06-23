@@ -26,6 +26,14 @@ defmodule Xarango.Domain.Document do
         SimpleQuery.first_example(%SimpleQuery{example: params, collection: _collection().name}, _database())
         |> to_document
       end
+      def one?(params) do
+        try do
+          one(params)
+        rescue
+          Xarango.Error -> nil
+          error -> raise error
+        end
+      end
       def list(params, options\\[]) do
         case options[:cursor] do
           cursor when is_binary(cursor) ->
