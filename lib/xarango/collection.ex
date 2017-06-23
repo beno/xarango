@@ -15,37 +15,37 @@ defmodule Xarango.Collection do
   end
 
   def collection(collection, database\\nil) do
-    url(collection.name, database)
+    url(name(collection), database)
     |> get
     |> to_collection
   end
 
   def properties(collection, database\\nil) do
-    url("#{collection.name}/properties", database)
+    url("#{name(collection)}/properties", database)
     |> get
     |> to_collection
   end
 
   def count(collection, database\\nil) do
-    url("#{collection.name}/count", database)
+    url("#{name(collection)}/count", database)
     |> get
     |> to_collection
   end
 
   def figures(collection, database\\nil) do
-    url("#{collection.name}/figures", database)
+    url("#{name(collection)}/figures", database)
     |> get
     |> to_collection
   end
 
   def revision(collection, database\\nil) do
-    url("#{collection.name}/revision", database)
+    url("#{name(collection)}/revision", database)
     |> get
     |> to_collection
   end
 
   def checksum(collection, database\\nil) do
-    url("#{collection.name}/checksum", database)
+    url("#{name(collection)}/checksum", database)
     |> get
     |> to_collection
   end
@@ -57,21 +57,24 @@ defmodule Xarango.Collection do
   end
 
   def destroy(collection, database\\nil) do
-    url(collection.name, database)
+    url(name(collection), database)
     |> delete
   end
-  
+
   def ensure(collection, database\\nil, indexes\\[]) do
     try do
       collection(collection, database)
     rescue
       Xarango.Error ->
-        create(collection, database)
-        Enum.each indexes, fn index ->
-          Index.create(index, collection.name, database)
-        end
+        collection = create(collection, database)
+        Enum.each(indexes, &Index.create(&1, name(collection), database))
+        collection
     end
   end
+
+  defp name(%{name: name}), do: name
+  defp name(%{collection: name}), do: name
+  defp name(name) when is_binary(name), do: name
 
   def __destroy_all(database\\nil) do
     collections(database)
