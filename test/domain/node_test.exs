@@ -43,6 +43,14 @@ defmodule DomainNodeTest do
     assert model.vertex._data == %{jabba: "dabba"}
   end
 
+  test "return nil" do
+    node1 = TestNode.one?(%{_id: "DOESNTEXIST"})
+    node2 = TestDbNode.one?(%{_id: "DOESNTEXIST"})
+    assert node1 == nil
+    assert node2 == nil
+  end
+
+
   test "get one model in db" do
     source = TestDbNode.create(%{jabba: "dabba"})
     model = TestDbNode.one(%{_id: source.vertex._id})
@@ -57,7 +65,7 @@ defmodule DomainNodeTest do
     assert length(result.result) == 1
     assert Enum.at(result.result, 0).vertex._data == source.vertex._data
   end
-  
+
   test "get next list with cursor" do
     1..10 |> Enum.each(fn idx -> TestNode.create(%{name: "#{idx}"}) end)
     result = TestNode.list(%{}, [sort: :name, per_page: 4])
@@ -121,8 +129,8 @@ defmodule DomainNodeTest do
     model = TestDbNode.create(%{jabba: "dabba"})
     assert model[:jabba] == "dabba"
   end
-  
-  test "creates index for model and searches it" do
+
+  test "creates index for node and searches it" do
     model = TestIndexNode.create(%{jabba: "dabba"})
     result = TestIndexNode.search(:jabba, "dab")
     assert model[:id] == Enum.at(result, 0)._id
@@ -164,6 +172,6 @@ end
 
 defmodule TestIndexNode do
   use Xarango.Domain.Node, graph: NodeTestGraph
-  
+
   index :fulltext, :jabba
 end

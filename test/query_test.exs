@@ -28,7 +28,7 @@ defmodule QueryTest do
     |> Query.where(%{age: 10})
     |> Query.limit(4)
     |> Query.paginate(20)
-    assert Xarango.AQL.to_aql(q.query) == "FOR r IN products FILTER r.foo == \"bar\" FILTER r.size == 4 FILTER r.age == 10 LIMIT 4 RETURN r"
+    assert Xarango.AQL.to_aql(q.query) == "FOR x IN products FILTER x.foo == 'bar' FILTER x.size == 4 FILTER x.age == 10 LIMIT 4 RETURN x"
     assert q.batchSize == 20
     assert q.count == true
   end
@@ -51,12 +51,21 @@ defmodule QueryTest do
     assert explanation.error == false
   end
 
+  test "fulltext" do
+    collection = %{name: "things"}
+    q = Query.from(collection)
+    |> Query.search("field", "value")
+    |> Query.paginate(10)
+    assert Xarango.AQL.to_aql(q.query) == "FOR x IN FULLTEXT(things, 'field', 'prefix:value') RETURN x"
+    assert q.batchSize == 10
+  end
+
   test "build" do
     collection = %{name: "things"}
     filter = [name: "foo"]
     options = [per_page: 20, sort: :name]
     q = Query.build(collection, filter, options)
-    assert Xarango.AQL.to_aql(q.query) == "FOR r IN things FILTER r.name == \"foo\" SORT r.name ASC RETURN r"
+    assert Xarango.AQL.to_aql(q.query) == "FOR x IN things FILTER x.name == 'foo' SORT x.name ASC RETURN x"
     assert q.batchSize == 20
   end
 

@@ -32,6 +32,11 @@ defmodule DomainDocumentTest do
     assert model.doc._data == %{jabba: "dabba"}
   end
 
+  test "return nil" do
+    model = TestModel.one?(%{_id: "DOESNTEXIST"})
+    assert model == nil
+  end
+
   test "get one model in db" do
     source = TestDbModel.create(%{jabba: "dabba"})
     model = TestDbModel.one(%{_id: source.doc._id})
@@ -46,7 +51,7 @@ defmodule DomainDocumentTest do
     assert length(result.result) == 1
     assert Enum.at(result.result, 0).doc._data == source.doc._data
   end
-  
+
   test "get model list with pagination" do
     1..10 |> Enum.each(fn idx -> TestModel.create(%{name: "#{idx}"}) end)
     result = TestModel.list(%{}, [sort: :name, per_page: 2])
@@ -54,7 +59,7 @@ defmodule DomainDocumentTest do
     assert is_list(result.result)
     assert length(result.result) == 2
   end
-  
+
   test "get model next list with cursor" do
     1..10 |> Enum.each(fn idx -> TestModel.create(%{name: "#{idx}"}) end)
     result = TestModel.list(%{}, [sort: :name, per_page: 4])
@@ -68,7 +73,7 @@ defmodule DomainDocumentTest do
     assert result3.id == nil
     assert length(result3.result) == 2
   end
-  
+
   test "get model next list with pages" do
     1..10 |> Enum.each(fn idx -> TestModel.create(%{name: "#{idx}"}) end)
     result = TestModel.list(%{}, [sort: :name, per_page: 4, page: 1])
@@ -135,13 +140,13 @@ defmodule DomainDocumentTest do
     model = TestDbModel.create(%{jabba: "dabba"})
     assert model[:jabba] == "dabba"
   end
-  
+
   test "creates index for model and searches it" do
     model = TestDbIndexModel.create(%{jabba: "dabba"})
     result = TestDbIndexModel.search(:jabba, "dab")
     assert model[:id] == Enum.at(result, 0)[:id]
   end
-  
+
   defp _database do
     %Xarango.Database{name: "test_db"}
   end
@@ -159,6 +164,6 @@ end
 
 defmodule TestDbIndexModel do
   use Xarango.Domain.Document, db: :test_db
-  
+
   index :fulltext, :jabba
 end

@@ -49,17 +49,6 @@ defmodule DomainGraphTest do
     assert length(alice_liked_by) == 1
   end
 
-  test "ensure relationships" do
-    TestGraph.ensure
-    alice = Person.create(%{name: "Alice"})
-    bob = Person.create(%{name: "Bob"})
-    TestGraph.ensure_likes(bob, alice)
-    TestGraph.ensure(bob, :likes, alice)
-    likes_alice = TestGraph.person_likes(alice)
-    assert length(likes_alice) == 1
-  end
-
-
   test "list db relationships" do
     TestDbGraph.ensure
     alice = DbPerson.create(%{name: "Alice"})
@@ -160,6 +149,31 @@ defmodule DomainGraphTest do
     assert length(result.paths) == 1
     assert length(result.vertices) == 1
   end
+
+  test "ensure relationships" do
+    TestGraph.ensure
+    alice = Person.create(%{name: "Alice"})
+    volvo = Brand.create(%{name: "Volvo"})
+    volvo_car = Car.create(%{name: "Volvo 1"})
+    values = %{has_brand: volvo, drives: alice}
+    TestGraph.ensure_relationships(volvo_car, values)
+    assert length(TestGraph.get(volvo_car, :has_brand, volvo)) == 1
+    assert length(TestGraph.get(alice, :drives, volvo_car)) == 1
+  end
+
+  test "ensure relationships list" do
+    TestGraph.ensure
+    alice = Person.create(%{name: "Alice"})
+    bob = Person.create(%{name: "Bob"})
+    jim = Person.create(%{name: "Jim"})
+    values = %{likes: [bob, jim]}
+    TestGraph.ensure_relationships(alice, values)
+    assert length(TestGraph.get(alice, :likes, bob)) == 1
+    assert length(TestGraph.get(alice, :likes, jim)) == 1
+    assert length(TestGraph.get(bob, :likes, alice)) == 0
+    assert length(TestGraph.get(jim, :likes, alice)) == 0
+  end
+
 
   defp _database do
     %Xarango.Database{name: "test_db"}

@@ -55,6 +55,13 @@ defmodule EdgeTest do
     assert result[:removed] == true
   end
 
+  test "get collection name" do
+    graph = Graph.create(graph_())
+    {collection, _, edge} = _create_edge(graph)
+    edge_collection = Edge.collection(edge)
+    assert edge_collection == %Xarango.EdgeCollection{collection: collection.collection}
+  end
+
   defp _create_edge(graph) do
     edge_coll = edge_collection_()
     {vertex_coll, from, to} = _create_vertices(graph)
