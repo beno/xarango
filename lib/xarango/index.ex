@@ -6,11 +6,11 @@ defmodule Xarango.Index do
   alias Xarango.Index
   import Xarango.Client
   use Xarango.URI, prefix: "index"
-  
+
   defmacro index(type, field) do
     quote do
       @indexes %Index{type: Atom.to_string(unquote(type)), fields: [Atom.to_string(unquote(field))]}
-      defp indexes, do: @indexes
+      def indexes, do: @indexes
       defoverridable [indexes: 0]
     end
   end
@@ -18,12 +18,12 @@ defmodule Xarango.Index do
   defmacro __using__(_options\\[]) do
     quote do
       Module.register_attribute __MODULE__, :indexes, accumulate: true
-      defp indexes, do: @indexes
+      def indexes, do: @indexes
       defoverridable [indexes: 0]
       import Index, only: [index: 2]
     end
   end
-  
+
   def create(%Index{type: type} = index, collection_name, database\\nil) when not is_nil(type) do
     url("", database, collection: collection_name)
     |> post(index)
