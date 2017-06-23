@@ -23,31 +23,14 @@ defmodule Xarango.TraversalResult do
     result = visited
       |> Map.put(:vertices, Enum.map(visited[:vertices], &Xarango.Vertex.to_vertex(&1)))
       |> Map.put(:paths, Enum.map(visited[:paths], &Xarango.Path.to_path(&1)))
-    struct(Xarango.TraversalResult, result)
+    struct(__MODULE__, result)
   end
 
-  def vertices_to(result), do: vertices(result, :to)
-  def vertices_from(result), do: vertices(result, :from)
-  def vertices(result, dir) do
+  def edges(result) do
     result.paths
-   |> Enum.reduce([], fn path, vertices ->
-      case path.edges do
-        [] -> vertices
-        _ -> vertices ++ target_vertices(path, dir)
-      end
-    end)
-  end
-
-  defp target_vertices(path, dir) do
-    case dir do
-      :to -> Enum.map(path.edges, fn %{_to: vertex_id} -> find_vertex(vertex_id, path) end )
-      :from -> Enum.map(path.edges, fn %{_from: vertex_id} -> find_vertex(vertex_id, path) end )
-    end
-  end
-
-  defp find_vertex(id, path) do
-    path.vertices
-    |> Enum.find(fn vertex -> vertex._id == id end)
+    |> Enum.flat_map(fn %{edges: edges} -> edges end)
+    |> MapSet.new
+    |> MapSet.to_list
   end
 
 end
@@ -60,7 +43,7 @@ defmodule Xarango.Path do
     path = data
       |> Map.put(:vertices, Enum.map(data[:vertices], &Xarango.Vertex.to_vertex(&1)))
       |> Map.put(:edges, Enum.map(data[:edges], &Xarango.Edge.to_edge(&1)))
-    struct(Xarango.Path, path)
+    struct(__MODULE__, path)
   end
 
 end
