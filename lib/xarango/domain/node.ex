@@ -19,7 +19,7 @@ defmodule Xarango.Domain.Node do
           module -> module
         end
       end
-      defp _graph(options) do
+      def _graph(options) do
         %Xarango.Graph{name: Xarango.Util.name_from(_graph_module(options))}
       end
       defp _database(options) do
@@ -41,10 +41,12 @@ defmodule Xarango.Domain.Node do
         Node.create(data, collection, _graph(options), _database(options)) |> to_node
       end
       def one(params, options\\[]), do: Node.one(params, _collection(), _graph(options), _database(options)) |> to_node
+      def one?(params, options\\[]), do: Node.one?(params, _collection(), _graph(options), _database(options)) |> to_node
       def list(params, options\\[]), do: Node.list(params, options, _collection(), _graph(options), _database(options)) |> to_node
       def replace(node, data, options\\[]), do: Node.replace(node, data, _collection(), _graph(options), _database(options)) |> to_node
       def update(node, data, options\\[]), do: Node.update(node, data, _collection(), _graph(options), _database(options)) |> to_node
       def destroy(node, options\\[]), do: Node.destroy(node, _collection(), _graph(options), _database(options))
+      def get(from, relationship, to, options\\[]), do: _graph_module(options).get(from, relationship, to, _graph(options), _database(options))
       def fetch(node, field) do
         case field do
           :id -> {:ok, node.vertex._id}
@@ -53,10 +55,23 @@ defmodule Xarango.Domain.Node do
         end
       end
       def search(field, value) do
-        %Xarango.Query{query: "FOR doc IN FULLTEXT(#{_collection().collection}, \"#{field}\", \"prefix:#{value}\") RETURN doc", batchSize: 3}
+        Query.from(_collection().collection)
+        |> Query.search(field, value)
+        |> Query.paginate(20)
         |> Xarango.Query.query(_database([]))
         |> Map.get(:result)
       end
+      def relationships do
+        _graph_module([])._relationships
+        |> Enum.reduce([], fn relationship, relationships ->
+          case relationship do
+            %{from: __MODULE__} -> relationships ++ [relationship]
+            %{to: __MODULE__} -> relationships ++ [relationship]
+            _ -> relationships
+          end
+        end)
+      end
+      def to_node(nil), do: nil
       def to_node(%Xarango.QueryResult{result: vertices} = result ), do: %Xarango.QueryResult{result | result: to_node(vertices) }
       def to_node(vertices) when is_list(vertices), do: Enum.map(vertices, &to_node(&1))
       def to_node(vertex), do: struct(__MODULE__, vertex: vertex)
@@ -68,14 +83,19 @@ defmodule Xarango.Domain.Node do
     |> Vertex.vertex(collection, graph, database)
   end
 
-  def one(params, collection, edges, _graph, database) when is_list(edges) do
-    SimpleQuery.by_example(%SimpleQuery{example: params, collection: collection.collection}, database) |> to_vertex
-  end
   def one(params, collection, graph, database) do
     case params do
       %{id: id} -> Vertex.vertex(%Vertex{_id: id}, collection, graph, database)
       %{vertex: vertex} -> Vertex.vertex(vertex, collection, graph, database)
       _ -> SimpleQuery.first_example(%SimpleQuery{example: params, collection: collection.collection}, database) |> to_vertex
+    end
+  end
+  def one?(params, collection, graph, database) do
+    try do
+      one(params, collection, graph, database)
+    rescue
+      Xarango.Error -> nil
+      error -> raise error
     end
   end
 
@@ -107,6 +127,9 @@ defmodule Xarango.Domain.Node do
     |> Vertex.destroy(collection, graph, database)
   end
 
+  defp to_vertex(nil) do
+    nil
+  end
   defp to_vertex(documents) when is_list(documents) do
     Enum.map(documents, &to_vertex(&1))
   end
