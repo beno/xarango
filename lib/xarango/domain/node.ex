@@ -85,6 +85,7 @@ defmodule Xarango.Domain.Node do
 
   def one(params, collection, graph, database) do
     case params do
+      %{id: nil} -> nil
       %{id: id} -> Vertex.vertex(%Vertex{_id: id}, collection, graph, database)
       %{vertex: vertex} -> Vertex.vertex(vertex, collection, graph, database)
       _ -> SimpleQuery.first_example(%SimpleQuery{example: params, collection: collection.collection}, database) |> to_vertex
