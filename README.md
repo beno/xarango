@@ -130,7 +130,7 @@ The package can be installed as:
 
     ```elixir
     def deps do
-      [{:xarango, "~> 0.5.7"}]
+      [{:xarango, "~> 0.6.0"}]
     end
     ```
 
