@@ -92,15 +92,10 @@ defmodule Xarango.Util do
   end
 
   def to_resource(resource, options\\[])
-  def to_resource(resources, options) when is_list(resources) do
-    resources |> Enum.map(&to_resource(&1, options))
-  end
-  def to_resource(%{vertex: vertex} = node, options) do
-    vertex |> to_resource(options) |> add_resource_relationships(node, options)
-  end
-  def to_resource(%{doc: document}, options) do
-    document |> to_resource(options)
-  end
+  def to_resource(resources, options) when is_list(resources), do: resources |> Enum.map(&to_resource(&1, options))
+  def to_resource(%{vertex: vertex} = node, options), do: vertex |> to_resource(options) |> add_resource_relationships(node, options)
+  def to_resource(%{doc: document}, options), do: document |> to_resource(options)
+  def to_resource(%{result: result}, options), do: result |> to_resource(options)
   def to_resource(%{_data: data, _id: id}, options) do
     id = options[:encode_id] == true && form_encode(id) || id
     %{id: id}
