@@ -10,11 +10,11 @@ Xarango has a low level API that maps directly to the Arango REST API. On top of
 Configure xarango in `config/config.exs`:
 
 ```elixir
-    config :xarango, :db,
-      server: "http://localhost:8529",
-      database: "test_db",
-      username: System.get_env("ARANGO_USER"),
-      password: System.get_env("ARANGO_PASSWORD")
+config :xarango, :db,
+  server: "http://localhost:8529",
+  database: "test_db",
+  username: System.get_env("ARANGO_USER"),
+  password: System.get_env("ARANGO_PASSWORD")
 ```
 
 Set your credentials:
@@ -128,16 +128,16 @@ The package can be installed as:
 
   1. Add `xarango` to your list of dependencies in `mix.exs`:
 
-    ```elixir
-    def deps do
-      [{:xarango, "~> 0.6.1"}]
-    end
-    ```
+  ```elixir
+  def deps do
+    [{:xarango, "~> 0.6.1"}]
+  end
+  ```
 
   2. Ensure `xarango` is started before your application:
 
-    ```elixir
-    def application do
-      [applications: [:xarango]]
-    end
-    ```
+  ```elixir
+  def application do
+    [applications: [:xarango]]
+  end
+  ```
