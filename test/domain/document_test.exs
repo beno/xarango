@@ -147,11 +147,21 @@ defmodule DomainDocumentTest do
     assert model[:id] == Enum.at(result, 0)[:id]
   end
 
+  test "create geo index and run within query" do
+    model = TestDbIndexModel.create(%{jabba: "test", location: [47.618336,-122.201141]})
+    result = TestDbIndexModel.within([47.619240, -122.203019], 200, :distance)
+    assert model[:id] == Enum.at(result, 0)[:id]
+  end
+
+  test "create geo index and run near query" do
+    model = TestDbIndexModel.create(%{jabba: "test", location: [47.618336,-122.201141]})
+    result = TestDbIndexModel.near([47.619240, -122.203019], 10, :distance)
+    assert model[:id] == Enum.at(result, 0)[:id]
+  end
+
   defp _database do
     %Xarango.Database{name: "test_db"}
   end
-
-
 end
 
 defmodule TestModel do
@@ -166,4 +176,5 @@ defmodule TestDbIndexModel do
   use Xarango.Domain.Document, db: :test_db
 
   index :fulltext, :jabba
+  index :geo, :location
 end

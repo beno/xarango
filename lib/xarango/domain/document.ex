@@ -68,6 +68,53 @@ defmodule Xarango.Domain.Document do
         |> to_document
       end
 
+      @doc """
+        ## Wthin geo search in collection
+
+        Make sure you have a geo index on collection module
+
+        ```
+        defmodule Station do
+          index :geo, :location
+        end
+        ```
+
+        First argument it's a list with lat & lon,
+        Second argument represent the radius within arango will search
+        Third argument define a new column with distance in meters (filled by arango)
+
+        `Station.within({47.632014, -122.207210}, 100, :distance)`
+      """
+      def within([latitude, longitude], radius \\ 0, column \\ :distance) do
+        %Xarango.Query{query: "FOR doc IN WITHIN(#{_collection().name}, #{latitude}, #{longitude}, #{radius}, \"#{Atom.to_string(column)}\") RETURN doc", batchSize: 3}
+        |> Xarango.Query.query(_database())
+        |> Map.get(:result)
+        |> to_document
+      end
+
+      @doc """
+        ## Near geo search in collection
+
+        Make sure you have a geo index on collection module
+
+        ```
+        defmodule Station do
+          index :geo, :location
+        end
+        ```
+        First argument it's a list with lat & lon,
+        Second argument limit results to only first n results
+        Third argument define a new column with distance in meters (filled by arango)
+
+        `Station.near({47.632014, -122.207210}, 10, :distance)`
+      """
+      def near([latitude, longitude], limit \\ 0, column \\ :distance) do
+        %Xarango.Query{query: "FOR doc IN NEAR(#{_collection().name}, #{latitude}, #{longitude}, #{limit}, \"#{Atom.to_string(column)}\") RETURN doc", batchSize: 3}
+        |> Xarango.Query.query(_database())
+        |> Map.get(:result)
+        |> to_document
+      end
+
       def fetch(document, field) do
         case field do
           :id -> {:ok, document.doc._id}
@@ -88,10 +135,6 @@ defmodule Xarango.Domain.Document do
       defp to_document(doc) do
         struct(__MODULE__, doc: Document.to_document(doc))
       end
-
-
     end
   end
-
-
 end
